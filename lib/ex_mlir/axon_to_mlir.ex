@@ -79,7 +79,9 @@ defmodule ExMLIR.AxonToMLIR do
 
   defp convert_operation({:var, var}, mlir_ops, var_counter, var_map) do
     case Map.get(var_map, var) do
-      nil -> {mlir_ops, var_counter, var_map}
+      nil ->
+        # TODO: Handle undefined variable reference
+        {mlir_ops, var_counter, var_map}
       idx -> {[{:var_ref, idx} | mlir_ops], var_counter, var_map}
     end
   end
@@ -130,6 +132,7 @@ defmodule ExMLIR.AxonToMLIR do
   end
 
   defp resolve_operand_ref(_, _var_map, default) do
+    # TODO: Handle unknown operand reference format - using default
     "%#{default}"
   end
 

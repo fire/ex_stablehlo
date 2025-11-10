@@ -34,13 +34,16 @@ defmodule ExMLIR.Translator do
     # Combine all AST nodes into a block and convert to string
     combined_ast = case ast_nodes do
       nodes when is_list(nodes) -> ASTBuilder.block(nodes)
-      node -> node
+      node ->
+        # TODO: Handle non-list AST node format
+        node
     end
     
     ASTBuilder.to_string(combined_ast)
   end
 
   defp translate_ast(ast, state, mode) do
+    # TODO: Initial accumulator is nil - ensure this is handled correctly
     Enum.reduce(ast, {nil, state}, fn node, {acc, st} ->
       case node do
         {:func_def, name, {args, return_type}, ops} ->
