@@ -1,17 +1,15 @@
-# 99 Problems in Elixir - MLIR Conversion Examples
+# ExMLIR Examples
 
-This directory contains examples demonstrating bidirectional conversion between Elixir code from the "99 Problems in Elixir" repository and MLIR, using the `arith`, `scf`, `memref`, and `func` dialects.
+Examples demonstrating MLIR (StableHLO) to Axon conversion and Elixir to MLIR conversion.
 
 ## Files
 
-### Example Modules (Split by Functionality)
+### Example Modules
 
-- `arithmetic.ex`: Arithmetic operations (add, sub, mul, div, bitwise, comparisons)
-- `control_flow.ex`: Control flow operations (if/else, loops, while)
-- `memory.ex`: Memory operations (tensor access, list operations, allocation)
-- `functions.ex`: Function definitions and calls
-- `round_trip.ex`: Round-trip conversion examples
-- `axon_models.ex`: Axon neural network model conversions
+- `mlir_to_axon.ex`: Convert MLIR (StableHLO) to Axon models
+- `elixir_to_mlir.ex`: Convert Elixir code to MLIR (StableHLO)
+- `axon_models.ex`: Axon model conversion examples
+- `99_problems_stablehlo.ex`: StableHLO solutions for 99 Problems in Elixir
 
 ### Scripts
 

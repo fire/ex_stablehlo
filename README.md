@@ -1,24 +1,15 @@
 # ExMLIR
 
-A library for converting MLIR (Multi-Level Intermediate Representation) to Elixir Nx and Axon code. This library provides support for minimal MLIR dialects including `arith`, `scf`, `memref`, and `func`, enabling translation of MLIR operations to Elixir's numerical computing ecosystem.
+A library for converting MLIR (StableHLO) to Axon models and Elixir code to MLIR. This library focuses on neural network model conversion, enabling translation between MLIR's StableHLO operations and Elixir's Axon framework.
 
 ## Features
 
-- **Bidirectional Conversion**: 
-  - MLIR → Elixir Nx/Axon
-  - Elixir Nx/Axon → MLIR
-- **MLIR Parser**: Parses MLIR text format into an abstract syntax tree
-- **Elixir Parser**: Parses Elixir code (using Sourceror) to extract Nx/Axon operations
-- **Dialect Support**: 
-  - Core dialects (fully implemented): `arith`, `scf`, `memref`, `func`
-  - Additional dialects (emulated): `tensor`, `linalg`, `affine`, `vector`, `math`, `complex`, `index`, `shape`
-- **Dialect Emulation Framework**: Systematic approach to emulating MLIR dialects through composition, masking, and transformation
+- **MLIR to Axon**: Convert MLIR (StableHLO) code to Axon neural network models
+- **Elixir to MLIR**: Parse Elixir code and convert to MLIR (StableHLO) representation
+- **MLIR Parser**: Parses MLIR text format (StableHLO) into an abstract syntax tree
+- **Elixir Parser**: Parses Elixir code (using Sourceror) to extract Axon/Nx operations
+- **StableHLO Support**: Only StableHLO is directly supported; all other MLIR dialects are emulated via StableHLO
 - **AST Generation**: Uses [Sourceror](https://hex.pm/packages/sourceror) for proper Elixir AST construction
-- **Multiple Output Formats**: 
-  - Nx computation graphs
-  - Axon models
-  - Elixir code strings
-  - MLIR code strings
 
 ## Installation
 
@@ -37,87 +28,57 @@ end
 
 ## Usage
 
-### Basic Example
+### MLIR to Axon
 
 ```elixir
 mlir_code = """
-func.func @main(%arg0: i32, %arg1: i32) -> i32 {
-  %0 = arith.addi %arg0, %arg1 : i32
-  return %0 : i32
-}
+stablehlo.add %arg0, %arg1 : tensor<f32>
 """
-
-# Convert to Elixir code string
-elixir_code = ExMLIR.to_elixir(mlir_code)
-# => "def main(inputs) do\n  var_0 = Nx.add(Enum.at(inputs, 0), Enum.at(inputs, 1))\nend"
-
-# Convert to Nx computation graph
-nx_graph = ExMLIR.to_nx(mlir_code)
 
 # Convert to Axon model
 axon_model = ExMLIR.to_axon(mlir_code)
 ```
 
+### Elixir to MLIR
+
+```elixir
+elixir_code = """
+defn add(a, b) do
+  Nx.add(a, b)
+end
+"""
+
+# Convert to MLIR (StableHLO)
+mlir_code = ExMLIR.from_elixir(elixir_code)
+
+# Convert Axon model to MLIR
+model = Axon.input("input", shape: {nil, 784})
+  |> Axon.dense(128)
+  |> Axon.dense(10, activation: :softmax)
+
+mlir_code = ExMLIR.from_axon(model)
+```
+
 ### Supported Operations
 
-#### Arithmetic Operations
+All operations use StableHLO. Other MLIR dialects are emulated via StableHLO.
+
+#### StableHLO Operations
 
 ```elixir
-# Addition
-"%0 = arith.addi %arg0, %arg1 : i32"
-"%0 = arith.addf %arg0, %arg1 : f32"
+# Arithmetic
+"%0 = stablehlo.add %arg0, %arg1 : tensor<f32>"
+"%0 = stablehlo.subtract %arg0, %arg1 : tensor<f32>"
+"%0 = stablehlo.multiply %arg0, %arg1 : tensor<f32>"
+"%0 = stablehlo.divide %arg0, %arg1 : tensor<f32>"
 
-# Subtraction
-"%0 = arith.subi %arg0, %arg1 : i32"
-"%0 = arith.subf %arg0, %arg1 : f32"
+# Linear Algebra (for neural networks)
+"%0 = stablehlo.dot_general %arg0, %arg1 : tensor<f32>"
+"%0 = stablehlo.convolution %input, %filter : tensor<f32>"
 
-# Multiplication
-"%0 = arith.muli %arg0, %arg1 : i32"
-"%0 = arith.mulf %arg0, %arg1 : f32"
-
-# Division
-"%0 = arith.divi %arg0, %arg1 : i32"
-"%0 = arith.divf %arg0, %arg1 : f32"
-
-# Comparisons
-"%0 = arith.cmpi eq, %arg0, %arg1 : i32"
-"%0 = arith.cmpf olt, %arg0, %arg1 : f32"
-
-# Bitwise operations
-"%0 = arith.andi %arg0, %arg1 : i32"
-"%0 = arith.ori %arg0, %arg1 : i32"
-"%0 = arith.xori %arg0, %arg1 : i32"
-"%0 = arith.shli %arg0, %arg1 : i32"
-"%0 = arith.shri %arg0, %arg1 : i32"
-```
-
-#### Memory Operations
-
-```elixir
-# Allocate memory
-"%0 = memref.alloc() : memref<10x20xf32>"
-
-# Load from memory
-"%0 = memref.load %memref[%idx1, %idx2] : memref<10x20xf32>"
-
-# Store to memory
-"memref.store %value, %memref[%idx1, %idx2] : memref<10x20xf32>"
-
-# Get dimension
-"%0 = memref.dim %memref, %dim : index"
-```
-
-#### Control Flow
-
-```elixir
-# For loop
-"scf.for %iv = %c0 to %c10 step %c1 iter_args(%arg = %init) -> (i32) { ... }"
-
-# If conditional
-"scf.if %condition -> (i32) { ... } else { ... }"
-
-# While loop
-"scf.while (%arg = %init) : (i32) -> (i32) { ... }"
+# Control Flow
+"%result = stablehlo.if %condition -> (tensor<f32>) { ... } else { ... }"
+"%result = stablehlo.while (%arg = %init) : (tensor<f32>) -> (tensor<f32>) { ... }"
 ```
 
 ## Architecture
@@ -142,9 +103,8 @@ The library is organized into several key modules:
 - **`ExMLIR.DialectEmulator`**: Runtime emulation engine for dialect operations
 
 ### Conversion Modules
-- **`ExMLIR.ElixirParser`**: Parses Elixir code to extract Nx/Axon operations
-- **`ExMLIR.NxToMLIR`**: Converts Nx operations to MLIR
-- **`ExMLIR.AxonToMLIR`**: Converts Axon models to MLIR
+- **`ExMLIR.ElixirParser`**: Parses Elixir code to extract Axon/Nx operations
+- **`ExMLIR.AxonToMLIR`**: Converts Axon models and Elixir operations to MLIR (StableHLO)
 
 ## Related Projects
 

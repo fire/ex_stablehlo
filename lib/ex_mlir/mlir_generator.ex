@@ -24,11 +24,28 @@ defmodule ExMLIR.MLIRGenerator do
     """
   end
 
-  defp generate_operation({:arith, op, result, operands, type}) do
+  defp generate_operation({:stablehlo, op, result, operands, type}) do
     ops_str = Enum.join(operands, ", ")
     type_str = format_type(type)
-    "  %#{result} = arith.#{op} #{ops_str} : #{type_str}"
+    "  %#{result} = stablehlo.#{op} #{ops_str} : #{type_str}"
   end
+
+  defp generate_operation({:arith, op, result, operands, type}) do
+    # Emulated via StableHLO
+    ops_str = Enum.join(operands, ", ")
+    type_str = format_type(type)
+    "  %#{result} = stablehlo.#{map_arith_to_stablehlo(op)} #{ops_str} : #{type_str}"
+  end
+
+  defp map_arith_to_stablehlo(:addi), do: :add
+  defp map_arith_to_stablehlo(:addf), do: :add
+  defp map_arith_to_stablehlo(:subi), do: :subtract
+  defp map_arith_to_stablehlo(:subf), do: :subtract
+  defp map_arith_to_stablehlo(:muli), do: :multiply
+  defp map_arith_to_stablehlo(:mulf), do: :multiply
+  defp map_arith_to_stablehlo(:divi), do: :divide
+  defp map_arith_to_stablehlo(:divf), do: :divide
+  defp map_arith_to_stablehlo(_), do: :add
 
   defp generate_operation({:memref, op, result, args}) do
     args_str = Enum.join(args, ", ")

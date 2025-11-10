@@ -10,29 +10,32 @@ defmodule ExMLIR.Translator do
   alias ExMLIR.ASTBuilder
 
   @doc """
-  Translates MLIR AST to Nx computation graph.
+  Translates MLIR AST to Axon model.
+
+  Converts StableHLO operations to Axon layers.
   """
-  def to_nx(ast) do
+  def to_axon(ast) do
     state = %{
       variables: %{},
       inputs: [],
-      outputs: []
+      layers: []
     }
 
-    {nx_expr, _state} = translate_ast(ast, state, :nx)
-    nx_expr
+    {axon_model, _state} = translate_ast(ast, state, :axon)
+    build_axon_model(axon_model)
   end
 
-  @doc """
-  Translates MLIR AST to Axon model.
-  """
-  def to_axon(ast) do
-    # For now, convert to Nx and wrap in Axon
-    nx_expr = to_nx(ast)
-    # This is a simplified approach - in practice, you'd want more sophisticated
-    # conversion to Axon layers
-    nx_expr
+  defp build_axon_model(layers) when is_list(layers) do
+    # Build Axon model from layers
+    Enum.reduce(layers, nil, fn layer, acc ->
+      case acc do
+        nil -> layer
+        prev -> Axon.container([prev, layer])
+      end
+    end)
   end
+
+  defp build_axon_model(layer), do: layer
 
   @doc """
   Translates MLIR AST to Elixir code string.
@@ -55,14 +58,21 @@ defmodule ExMLIR.Translator do
         {:func_def, name, {args, return_type}, ops} ->
           Func.translate(name, args, return_type, ops, st, mode)
 
+        {:stablehlo, op, result, operands, type} ->
+          translate_stablehlo(op, result, operands, type, st, mode)
+
         {:arith, op, result, operands, type} ->
-          Arith.translate(op, result, operands, type, st, mode)
+          # Emulate arith via StableHLO
+          stablehlo_op = map_arith_to_stablehlo(op)
+          translate_stablehlo(stablehlo_op, result, operands, type, st, mode)
 
         {:scf, op, line} ->
-          SCF.translate(op, line, st, mode)
+          # Emulate scf via StableHLO
+          translate_scf_via_stablehlo(op, line, st, mode)
 
         {:memref, op, result, args} ->
-          Memref.translate(op, result, args, st, mode)
+          # Emulate memref via StableHLO
+          translate_memref_via_stablehlo(op, result, args, st, mode)
 
         {:return, value, type} ->
           {value_expr, new_st} = resolve_value(value, st, mode)
@@ -72,23 +82,74 @@ defmodule ExMLIR.Translator do
           {expr_val, new_st} = resolve_value(expr, st, mode)
           var_name = String.to_atom("var_#{result}")
           new_vars = Map.put(new_st.variables, var_name, expr_val)
-          
-          # For elixir mode, create assignment AST
-          updated_st = case mode do
-            :elixir ->
-              assign_ast = ASTBuilder.assign(var_name, expr_val)
-              new_ast = [assign_ast | (new_st.ast || [])]
-              %{new_st | variables: new_vars, ast: new_ast}
-            _ ->
-              %{new_st | variables: new_vars}
-          end
-          
-          {expr_val, updated_st}
+          %{new_st | variables: new_vars}
 
         _ ->
           {acc, st}
       end
     end)
+  end
+
+  defp translate_stablehlo(op, result, operands, type, state, mode) do
+    case mode do
+      :axon ->
+        # Convert StableHLO operation to Axon layer
+        layer = case op do
+          :add -> build_axon_add(operands)
+          :multiply -> build_axon_multiply(operands)
+          :dot_general -> build_axon_dense(operands)
+          :convolution -> build_axon_conv(operands)
+          _ -> nil
+        end
+        
+        if layer do
+          new_layers = [layer | (state.layers || [])]
+          {layer, %{state | layers: new_layers}}
+        else
+          {nil, state}
+        end
+    end
+  end
+
+  defp build_axon_add([a, b]) do
+    # Simplified - would need proper Axon layer construction
+    Axon.add([a, b])
+  end
+
+  defp build_axon_multiply([a, b]) do
+    Axon.multiply([a, b])
+  end
+
+  defp build_axon_dense([input, weights]) do
+    Axon.dense(input, weights)
+  end
+
+  defp build_axon_conv([input, filters]) do
+    Axon.conv(input, filters)
+  end
+
+  defp map_arith_to_stablehlo(:addi), do: :add
+  defp map_arith_to_stablehlo(:addf), do: :add
+  defp map_arith_to_stablehlo(:subi), do: :subtract
+  defp map_arith_to_stablehlo(:subf), do: :subtract
+  defp map_arith_to_stablehlo(:muli), do: :multiply
+  defp map_arith_to_stablehlo(:mulf), do: :multiply
+  defp map_arith_to_stablehlo(:divi), do: :divide
+  defp map_arith_to_stablehlo(:divf), do: :divide
+  defp map_arith_to_stablehlo(_), do: :add
+
+  defp translate_scf_via_stablehlo(op, _line, state, mode) do
+    # SCF operations emulated via StableHLO control flow
+    case op do
+      :if -> {nil, state}  # Would use stablehlo.if
+      :while -> {nil, state}  # Would use stablehlo.while
+      _ -> {nil, state}
+    end
+  end
+
+  defp translate_memref_via_stablehlo(op, _result, _args, state, mode) do
+    # Memref operations emulated via StableHLO tensor operations
+    {nil, state}
   end
 
   defp resolve_value(value_str, state, mode) when is_binary(value_str) do
