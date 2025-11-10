@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/varnie/99-problems-in-elixir.git
+	branch = main
+	commit = 092ed4d2a5fd23e3646a2e2ebb3887cc757fabba
+	parent = ea1019284e03c96d75e33d44c06bb8a3a65a8c14
+	method = merge
+	cmdver = 0.4.9
