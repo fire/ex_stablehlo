@@ -31,7 +31,7 @@ defmodule ExMLIR.MLIRGenerator do
   end
 
   defp generate_operation({:arith, op, result, operands, type}) do
-    # Emulated via StableHLO
+    # TODO: Emulated via StableHLO - ensure all arith operations are properly mapped
     ops_str = Enum.join(operands, ", ")
     type_str = format_type(type)
     "  %#{result} = stablehlo.#{map_arith_to_stablehlo(op)} #{ops_str} : #{type_str}"

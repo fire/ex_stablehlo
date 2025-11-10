@@ -73,7 +73,7 @@ defmodule ExMLIR.Translator do
           {expr_val, new_st} = resolve_value(expr, st, mode)
           var_name = String.to_atom("var_#{result}")
           new_vars = Map.put(new_st.variables, var_name, expr_val)
-          %{new_st | variables: new_vars}
+          {expr_val, %{new_st | variables: new_vars}}
 
         _ ->
           {acc, st}  # TODO: Handle unknown AST node types
