@@ -68,6 +68,7 @@ defmodule ExMLIR.ElixirParser do
 
       # Other expressions
       other ->
+        # TODO: Handle unknown expression types
         {:unknown, other}
     end
   end

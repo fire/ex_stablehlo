@@ -89,6 +89,9 @@ defmodule ExMLIR.MLIRGenerator do
   defp format_type({:float, size}), do: "f#{size}"
   defp format_type({:memref, _}), do: "memref<?x?xf32>"
   defp format_type({:unknown, str}), do: str
-  defp format_type(_), do: "i32"
+  defp format_type(_) do
+    # TODO: Handle unknown type format - defaulting to i32
+    "i32"
+  end
 end
 

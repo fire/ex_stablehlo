@@ -133,7 +133,7 @@ defmodule ExMLIR.Dialects.SCF do
   end
 
   defp translate_yield(line, state, mode) do
-    # scf.yield returns values from loop/conditional
+    # TODO: scf.yield returns values from loop/conditional
     case Regex.run(~r/scf\.yield\s+(.+)/, line) do
       [_, values] ->
         # Yield values - in Nx this is just returning from the loop body

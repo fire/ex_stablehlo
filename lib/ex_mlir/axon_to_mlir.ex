@@ -89,6 +89,7 @@ defmodule ExMLIR.AxonToMLIR do
   end
 
   defp convert_operation(other, mlir_ops, var_counter, var_map) do
+    # TODO: Handle unknown operation types
     {[{:unknown, other} | mlir_ops], var_counter, var_map}
   end
 
@@ -154,7 +155,10 @@ defmodule ExMLIR.AxonToMLIR do
 
   defp extract_var_name({var, _, nil}) when is_atom(var), do: var
   defp extract_var_name(var) when is_atom(var), do: var
-  defp extract_var_name(_), do: :unknown
+  defp extract_var_name(_) do
+    # TODO: Handle unknown variable name format
+    :unknown
+  end
 
   @doc """
   Converts Axon layers to MLIR operations.

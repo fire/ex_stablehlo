@@ -131,7 +131,7 @@ defmodule ExMLIR.DialectEmulator do
 
   defp emulate_generic_linalg([operation, inputs, outputs], state, mode) do
     # TODO: Generic linalg operation - compose from basic operations
-    # This would analyze the operation and decompose it
+    # TODO: This would analyze the operation and decompose it
     {ASTBuilder.literal(nil), state}
   end
 

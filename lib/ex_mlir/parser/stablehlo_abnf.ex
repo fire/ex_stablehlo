@@ -62,7 +62,7 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   """
   def parse_bytes(bytes) when is_binary(bytes) do
     # TODO: Convert bytes to text if needed, or handle binary format
-    # For now, we'll assume bytes can be converted to text
+    # TODO: For now, we'll assume bytes can be converted to text
     text = if String.valid?(bytes), do: bytes, else: decode_bytes(bytes)
     parse_text(text)
   end
@@ -88,7 +88,8 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   # ============================================================================
 
   defp detect_format(input) do
-    # Simple heuristic: if it's valid UTF-8 and contains MLIR keywords, it's text
+    # TODO: Simple heuristic - if it's valid UTF-8 and contains MLIR keywords, it's text
+    # This could be improved with proper MLIR bytecode format detection
     cond do
       String.valid?(input) and String.contains?(input, ["func.func", "stablehlo.", "tensor<"]) ->
         :text
@@ -99,7 +100,8 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   end
 
   defp decode_bytes(bytes) do
-    # Attempt to decode as UTF-8, fallback to binary representation
+    # TODO: Attempt to decode as UTF-8, fallback to binary representation
+    # This is a simplified approach - proper MLIR bytecode parsing would be needed
     case :unicode.characters_to_binary(bytes, :latin1) do
       {:error, _, _} -> bytes
       text -> text
@@ -277,6 +279,7 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   end
 
   defp normalize_type(other) do
+    # TODO: Handle unknown type format
     {:unknown_type, other}
   end
 
@@ -296,7 +299,10 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   defp normalize_element_type({:rule, "FloatType", _}), do: :float
   defp normalize_element_type({:rule, "ComplexType", _}), do: :complex
   defp normalize_element_type({:rule, "BooleanType", _}), do: :boolean
-  defp normalize_element_type(other), do: {:unknown_element_type, other}
+  defp normalize_element_type(other) do
+    # TODO: Handle unknown element type format
+    {:unknown_element_type, other}
+  end
 
   defp normalize_constant({:rule, "IntegerLiteral", children}) do
     value = extract_terminal_string(children)
@@ -371,7 +377,10 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   defp parse_integer_type("i" <> size), do: {:integer, String.to_integer(size)}
   defp parse_integer_type("si" <> size), do: {:signed_integer, String.to_integer(size)}
   defp parse_integer_type("ui" <> size), do: {:unsigned_integer, String.to_integer(size)}
-  defp parse_integer_type(other), do: {:unknown_integer_type, other}
+  defp parse_integer_type(other) do
+    # TODO: Handle unknown integer type format
+    {:unknown_integer_type, other}
+  end
 
   defp parse_float_type("f" <> size), do: {:float, String.to_integer(size)}
   defp parse_float_type("bf" <> size), do: {:bfloat, String.to_integer(size)}
@@ -379,6 +388,9 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   defp parse_float_type("bf16"), do: {:bfloat, 16}
   defp parse_float_type("f32"), do: {:float, 32}
   defp parse_float_type("f64"), do: {:float, 64}
-  defp parse_float_type(other), do: {:unknown_float_type, other}
+  defp parse_float_type(other) do
+    # TODO: Handle unknown float type format
+    {:unknown_float_type, other}
+  end
 end
 
