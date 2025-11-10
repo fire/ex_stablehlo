@@ -99,6 +99,10 @@ defmodule ExMLIR.Translator do
         else
           {nil, state}  # TODO: Handle unsupported operations
         end
+
+      :elixir ->
+        # TODO: Implement Elixir code generation for StableHLO operations
+        {nil, state}
     end
   end
 
@@ -161,7 +165,10 @@ defmodule ExMLIR.Translator do
     end
   end
 
-  defp resolve_operand(other, _state), do: other
+  defp resolve_operand(other, _state) do
+    # TODO: Handle unknown operand format
+    other
+  end
 
   defp map_arith_to_stablehlo(:addi), do: :add
   defp map_arith_to_stablehlo(:addf), do: :add
@@ -171,7 +178,10 @@ defmodule ExMLIR.Translator do
   defp map_arith_to_stablehlo(:mulf), do: :multiply
   defp map_arith_to_stablehlo(:divi), do: :divide
   defp map_arith_to_stablehlo(:divf), do: :divide
-  defp map_arith_to_stablehlo(_), do: :add
+  defp map_arith_to_stablehlo(_) do
+    # TODO: Handle unknown arith operation - defaulting to add
+    :add
+  end
 
   defp translate_scf_via_stablehlo(op, _line, state, mode) do
     # TODO: SCF operations emulated via StableHLO control flow
@@ -193,7 +203,9 @@ defmodule ExMLIR.Translator do
       String.match?(value_str, ~r/^%\d+$/) ->
         var_name = String.to_atom("var_#{String.slice(value_str, 1..-1)}")
         case Map.get(state.variables, var_name) do
-          nil -> {value_str, state}
+          nil ->
+            # TODO: Handle undefined variable - returning string as-is
+            {value_str, state}
           val -> {val, state}
         end
 
@@ -226,6 +238,7 @@ defmodule ExMLIR.Translator do
         String.to_float(str)
 
       true ->
+        # TODO: Handle unknown literal format - returning string as-is
         str
     end
   end
