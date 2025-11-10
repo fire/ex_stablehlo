@@ -1,0 +1,94 @@
+# Copyright 2023 The StableHLO Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# The setup-build action gets everything needed by buildAndTest into the workspace.
+name: "Setup build environment (ninja, ccache, llvm, clang, lld)"
+description: "Setup build environment (ninja, ccache, llvm, clang, lld)"
+
+inputs:
+  llvm-version:
+    description: |
+      LLVM version for checkout and build. Used for ccache value and checkout.
+    required: true
+  clang-version:
+    description: |
+      Clang and LLD version to use for compilation. Independent of LLVM version.
+    required: false
+    default: '20'
+  python-version:
+    description: |
+      Python version to install.
+    required: false
+    default: '3.11.13'
+runs:
+  # This is a composite action - has a list of steps to execute.
+  using: "composite"
+
+  steps:
+  # Checkout llvm at version specified in input argument.
+  - uses: actions/checkout@v4
+    with:
+      repository: llvm/llvm-project
+      ref: ${{ inputs.llvm-version }}
+      path: llvm-project
+      fetch-depth: 1
+
+  # Get ninja for cmake build.
+  - name: Install Ninja
+    uses: llvm/actions/install-ninja@6a57890d0e3f9f35dfc72e7e48bc5e1e527cdd6c
+
+  # Install up-to-date versions of Clang and LLD (plus a few related packages).
+  # - Update Clang to support newer compiler features.
+  # - Install LLD to improve build speed on Linux.
+  - name: Install/update Clang and LLD
+    shell: bash
+    run: |
+      wget https://apt.llvm.org/llvm.sh
+      chmod +x llvm.sh
+      sudo ./llvm.sh ${{ inputs.clang-version }}
+      for program_name in "clang" "clang++" "lld"; do
+        link_path="/usr/bin/$program_name"
+        link_target="/usr/bin/$program_name-${{ inputs.clang-version }}"
+        priority=200
+        sudo update-alternatives --install \
+          "$link_path" "$program_name" "$link_target" "$priority"
+      done
+
+  # Update the system C++ headers.
+  - name: Update system C++ headers
+    shell: bash
+    run: |
+      sudo apt-add-repository ppa:ubuntu-toolchain-r/test
+      sudo apt-get update
+      sudo apt-get install libstdc++-13-dev
+
+  # Setup C++ caching using ccache.
+  # Cache key is a combination of OS arch and LLVM version.
+  - name: Ccache for C++ compilation
+    uses: hendrikmuhs/ccache-action@v1.2
+    with:
+      key: ${{ runner.os }}-stablehlo_build_assets-${{ inputs.llvm-version }}
+      max-size: 4G
+
+  # Install Python/Numpy for API tests
+  - name: Install Python and Pip
+    uses: actions/setup-python@v5
+    with:
+      python-version: ${{ inputs.python-version }}
+      cache: 'pip' # caching pip dependencies
+
+  - name: Install MLIR python requirements
+    shell: bash
+    run: |
+      pip install -r $GITHUB_WORKSPACE/llvm-project/mlir/python/requirements.txt

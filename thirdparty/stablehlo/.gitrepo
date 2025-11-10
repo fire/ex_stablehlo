@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/openxla/stablehlo.git
+	branch = main
+	commit = 3acda594d678e285ed0c8b4179bc1e90348e5997
+	parent = f62330914fbc170d48e2a8d6cff6b82a5df8220d
+	method = merge
+	cmdver = 0.4.9
