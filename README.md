@@ -156,7 +156,9 @@ The library is organized into several key modules:
 
 ## Dialect Emulation Strategies
 
-The library provides a comprehensive framework for emulating MLIR dialects through composition, masking, and transformation techniques. The core dialects (`arith`, `scf`, `memref`, `func`) are directly implemented, while additional dialects are emulated using strategic approaches:
+**IMPORTANT**: This library ONLY directly supports StableHLO operations. All other MLIR dialects (including `arith`, `scf`, `memref`, `func`) must be emulated using StableHLO operations.
+
+The library provides a comprehensive framework for emulating MLIR dialects through composition, masking, and transformation techniques. All dialects except StableHLO are emulated using strategic approaches:
 
 ### Emulation Approaches
 
@@ -179,35 +181,42 @@ The library provides a comprehensive framework for emulating MLIR dialects throu
 
 ### Supported Dialects
 
-#### Core Dialects (Fully Implemented)
-- ✅ `arith`: Arithmetic operations
-- ✅ `scf`: Structured control flow
-- ✅ `memref`: Memory references
-- ✅ `func`: Function definitions
+#### Directly Supported (ONLY StableHLO)
+- ✅ `stablehlo`: StableHLO operations (ONLY directly supported MLIR dialect)
 
-#### Additional Dialects (Emulated)
-- 🔄 `tensor`: Tensor operations (composes memref)
-- 🔄 `linalg`: Linear algebra (high-level composition)
-- 🔄 `affine`: Affine transformations (index computation)
-- 🔄 `vector`: Vector/SIMD operations (tensor operations)
-- 🔄 `math`: Mathematical functions (direct Nx mapping)
-- 🔄 `complex`: Complex numbers (Nx complex or composition)
-- 🔄 `index`: Index operations (integer arithmetic)
-- 🔄 `shape`: Shape operations (tensor metadata)
+#### Emulated Dialects (using StableHLO)
+All other MLIR dialects are emulated using StableHLO operations:
+
+- 🔄 `arith`: Arithmetic operations → emulated via `stablehlo.add`, `stablehlo.subtract`, etc.
+- 🔄 `scf`: Structured control flow → emulated via `stablehlo.if`, `stablehlo.while`
+- 🔄 `memref`: Memory references → emulated via `stablehlo.gather`, `stablehlo.scatter`, `stablehlo.constant`
+- 🔄 `func`: Function definitions → emulated via StableHLO function regions
+- 🔄 `tensor`: Tensor operations → emulated via `stablehlo.slice`, `stablehlo.gather`, etc.
+- 🔄 `linalg`: Linear algebra → emulated via `stablehlo.dot_general`, `stablehlo.convolution`
+- 🔄 `affine`: Affine transformations → emulated via StableHLO with index computation
+- 🔄 `vector`: Vector/SIMD operations → emulated via StableHLO tensor operations
+- 🔄 `math`: Mathematical functions → emulated via `stablehlo.exp`, `stablehlo.log`, etc.
+- 🔄 `complex`: Complex numbers → emulated via `stablehlo.complex`, `stablehlo.real`, `stablehlo.imag`
+- 🔄 `index`: Index operations → emulated via StableHLO arithmetic
+- 🔄 `shape`: Shape operations → emulated via StableHLO tensor shape operations
 
 ### Using Dialect Emulation
 
 ```elixir
-# Check if a dialect can be emulated
+# Check if a dialect can be emulated (requires stablehlo)
 ExMLIR.DialectStrategy.can_emulate?(:linalg)
-# => true
+# => true (because stablehlo is available by default)
 
 # Get emulation strategy for an operation
 ExMLIR.DialectStrategy.get_operation_strategy(:linalg, :matmul)
-# => {:nx, :dot, "Matrix multiplication via Nx.dot"}
+# => {:stablehlo, :dot_general, "linalg.matmul -> stablehlo.dot_general"}
+
+# Get emulation strategy for arith (emulated via stablehlo)
+ExMLIR.DialectStrategy.get_operation_strategy(:arith, :addi)
+# => {:stablehlo, :add, "arith.addi -> stablehlo.add"}
 
 # Emulate a dialect operation
-ExMLIR.DialectEmulator.emulate(:linalg, :matmul, [a, b], state, :nx)
+ExMLIR.DialectEmulator.emulate(:arith, :addi, [a, b], state, :stablehlo)
 ```
 
 ### Strategy Framework

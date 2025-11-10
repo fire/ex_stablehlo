@@ -2,277 +2,360 @@ defmodule ExMLIR.DialectStrategy do
   @moduledoc """
   Strategy framework for emulating MLIR dialects.
 
+  IMPORTANT: We ONLY support StableHLO operations directly.
+  All other MLIR dialects (arith, scf, memref, func, tensor, linalg, etc.)
+  must be emulated using StableHLO operations.
+
   This module provides a systematic approach to emulating MLIR dialects by
-  mapping them to Nx/Axon operations through masking, transformations, and
-  composition of existing operations.
+  mapping them to StableHLO operations through masking, transformations, and
+  composition.
   """
 
   @doc """
   Returns a map of dialect emulation strategies.
 
+  IMPORTANT: We ONLY support StableHLO operations directly.
+  Everything else (arith, scf, memref, func, etc.) must be emulated using StableHLO.
+
   Each strategy includes:
-  - Core operations that need to be emulated
-  - Mapping to Nx/Axon equivalents
+  - Operations that need to be emulated
+  - Mapping to StableHLO equivalents
   - Emulation approach (masking, composition, transformation)
   - Dependencies on other dialects
   """
   def strategies do
     %{
-      # Core dialects (already implemented)
-      arith: arith_strategy(),
-      scf: scf_strategy(),
-      memref: memref_strategy(),
-      func: func_strategy(),
+      # StableHLO (ONLY directly supported dialect)
+      stablehlo: stablehlo_strategy(),
 
-      # Additional dialects with emulation strategies
-      tensor: tensor_strategy(),
-      linalg: linalg_strategy(),
-      affine: affine_strategy(),
-      vector: vector_strategy(),
-      math: math_strategy(),
-      complex: complex_strategy(),
-      index: index_strategy(),
-      shape: shape_strategy(),
-      scf: scf_strategy(), # Already implemented, but enhanced
+      # All other dialects must be emulated using StableHLO
+      arith: arith_emulated_via_stablehlo(),
+      scf: scf_emulated_via_stablehlo(),
+      memref: memref_emulated_via_stablehlo(),
+      func: func_emulated_via_stablehlo(),
+      tensor: tensor_emulated_via_stablehlo(),
+      linalg: linalg_emulated_via_stablehlo(),
+      affine: affine_emulated_via_stablehlo(),
+      vector: vector_emulated_via_stablehlo(),
+      math: math_emulated_via_stablehlo(),
+      complex: complex_emulated_via_stablehlo(),
+      index: index_emulated_via_stablehlo(),
+      shape: shape_emulated_via_stablehlo(),
     }
   end
 
   # ============================================================================
-  # Core Dialect Strategies (Already Implemented)
+  # StableHLO Strategy (ONLY directly supported dialect)
   # ============================================================================
 
-  defp arith_strategy do
+  defp stablehlo_strategy do
     %{
-      approach: :direct_mapping,
+      approach: :direct_support,
       operations: %{
-        addi: {:nx, :add, :integer},
-        addf: {:nx, :add, :float},
-        subi: {:nx, :subtract, :integer},
-        subf: {:nx, :subtract, :float},
-        muli: {:nx, :multiply, :integer},
-        mulf: {:nx, :multiply, :float},
-        divi: {:nx, :divide, :integer},
-        divf: {:nx, :divide, :float},
-        cmpi: {:nx, :comparison, :integer},
-        cmpf: {:nx, :comparison, :float},
-        andi: {:nx, :bitwise_and, :integer},
-        ori: {:nx, :bitwise_or, :integer},
-        xori: {:nx, :bitwise_xor, :integer},
-        shli: {:nx, :left_shift, :integer},
-        shri: {:nx, :right_shift, :integer},
+        # Arithmetic operations
+        add: {:stablehlo, :add, "StableHLO addition"},
+        subtract: {:stablehlo, :subtract, "StableHLO subtraction"},
+        multiply: {:stablehlo, :multiply, "StableHLO multiplication"},
+        divide: {:stablehlo, :divide, "StableHLO division"},
+        remainder: {:stablehlo, :remainder, "StableHLO remainder"},
+        max: {:stablehlo, :max, "StableHLO maximum"},
+        min: {:stablehlo, :min, "StableHLO minimum"},
+        
+        # Comparison operations
+        compare: {:stablehlo, :compare, "StableHLO comparison"},
+        equal: {:stablehlo, :equal, "StableHLO equality"},
+        not_equal: {:stablehlo, :not_equal, "StableHLO inequality"},
+        greater: {:stablehlo, :greater, "StableHLO greater than"},
+        greater_equal: {:stablehlo, :greater_equal, "StableHLO greater or equal"},
+        less: {:stablehlo, :less, "StableHLO less than"},
+        less_equal: {:stablehlo, :less_equal, "StableHLO less or equal"},
+        
+        # Logical operations
+        and: {:stablehlo, :and, "StableHLO logical and"},
+        or: {:stablehlo, :or, "StableHLO logical or"},
+        xor: {:stablehlo, :xor, "StableHLO logical xor"},
+        not: {:stablehlo, :not, "StableHLO logical not"},
+        
+        # Control flow
+        if: {:stablehlo, :if, "StableHLO conditional"},
+        while: {:stablehlo, :while, "StableHLO while loop"},
+        case: {:stablehlo, :case, "StableHLO case statement"},
+        
+        # Tensor operations
+        constant: {:stablehlo, :constant, "StableHLO constant"},
+        iota: {:stablehlo, :iota, "StableHLO iota (range)"},
+        reshape: {:stablehlo, :reshape, "StableHLO reshape"},
+        transpose: {:stablehlo, :transpose, "StableHLO transpose"},
+        slice: {:stablehlo, :slice, "StableHLO slice"},
+        dynamic_slice: {:stablehlo, :dynamic_slice, "StableHLO dynamic slice"},
+        dynamic_update_slice: {:stablehlo, :dynamic_update_slice, "StableHLO dynamic update slice"},
+        concatenate: {:stablehlo, :concatenate, "StableHLO concatenate"},
+        pad: {:stablehlo, :pad, "StableHLO pad"},
+        gather: {:stablehlo, :gather, "StableHLO gather"},
+        scatter: {:stablehlo, :scatter, "StableHLO scatter"},
+        
+        # Mathematical functions
+        abs: {:stablehlo, :abs, "StableHLO absolute value"},
+        exp: {:stablehlo, :exp, "StableHLO exponential"},
+        expm1: {:stablehlo, :expm1, "StableHLO expm1"},
+        log: {:stablehlo, :log, "StableHLO logarithm"},
+        log1p: {:stablehlo, :log1p, "StableHLO log1p"},
+        tanh: {:stablehlo, :tanh, "StableHLO hyperbolic tangent"},
+        sin: {:stablehlo, :sin, "StableHLO sine"},
+        cos: {:stablehlo, :cos, "StableHLO cosine"},
+        sqrt: {:stablehlo, :sqrt, "StableHLO square root"},
+        rsqrt: {:stablehlo, :rsqrt, "StableHLO reciprocal square root"},
+        pow: {:stablehlo, :pow, "StableHLO power"},
+        atan2: {:stablehlo, :atan2, "StableHLO arctangent2"},
+        
+        # Reduction operations
+        reduce: {:stablehlo, :reduce, "StableHLO reduction"},
+        reduce_window: {:stablehlo, :reduce_window, "StableHLO reduce window"},
+        
+        # Linear algebra
+        dot_general: {:stablehlo, :dot_general, "StableHLO general dot product"},
+        convolution: {:stablehlo, :convolution, "StableHLO convolution"},
+        
+        # Other operations
+        select: {:stablehlo, :select, "StableHLO select (ternary)"},
+        clamp: {:stablehlo, :clamp, "StableHLO clamp"},
+        broadcast_in_dim: {:stablehlo, :broadcast_in_dim, "StableHLO broadcast"},
+        real: {:stablehlo, :real, "StableHLO real part"},
+        imag: {:stablehlo, :imag, "StableHLO imaginary part"},
+        complex: {:stablehlo, :complex, "StableHLO complex number"},
       },
       dependencies: [],
-      notes: "Direct mapping to Nx operations"
-    }
-  end
-
-  defp scf_strategy do
-    %{
-      approach: :control_flow_emulation,
-      operations: %{
-        for: {:elixir, :reduce, "Use Enum.reduce or Stream.iterate"},
-        if: {:elixir, :if, "Use Elixir if/else or Nx.select"},
-        while: {:elixir, :while, "Use Stream.iterate with condition"},
-        yield: {:elixir, :yield, "Return value from loop body"},
-        parallel: {:nx, :parallel, "Use Nx.while or parallel execution"},
-      },
-      dependencies: [:arith],
-      notes: "Control flow emulated via Elixir constructs and Nx.while"
-    }
-  end
-
-  defp memref_strategy do
-    %{
-      approach: :tensor_emulation,
-      operations: %{
-        alloc: {:nx, :broadcast, "Create tensor with shape"},
-        load: {:nx, :tensor_slice, "Index into tensor"},
-        store: {:nx, :put_slice, "Update tensor slice"},
-        get_global: {:nx, :constant, "Get global tensor"},
-        dim: {:nx, :axis_size, "Get dimension size"},
-        cast: {:nx, :as_type, "Cast tensor type"},
-      },
-      dependencies: [],
-      notes: "Memrefs emulated as Nx tensors"
-    }
-  end
-
-  defp func_strategy do
-    %{
-      approach: :function_emulation,
-      operations: %{
-        func: {:elixir, :def, "Elixir function definition"},
-        call: {:elixir, :call, "Function call"},
-        return: {:elixir, :return, "Return statement"},
-      },
-      dependencies: [],
-      notes: "Functions emulated as Elixir functions or Nx defn"
+      notes: "StableHLO is the ONLY directly supported MLIR dialect"
     }
   end
 
   # ============================================================================
-  # Additional Dialect Strategies
+  # Emulated Dialects (using StableHLO)
   # ============================================================================
 
-  defp tensor_strategy do
+  defp arith_emulated_via_stablehlo do
     %{
-      approach: :composition_with_memref,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        extract: {:nx, :tensor_slice, "Extract element/slice"},
-        insert: {:nx, :put_slice, "Insert into tensor"},
-        extract_slice: {:nx, :slice, "Extract sub-tensor"},
-        insert_slice: {:nx, :put_slice, "Insert sub-tensor"},
-        dim: {:nx, :axis_size, "Get dimension"},
-        rank: {:nx, :rank, "Get tensor rank"},
-        from_elements: {:nx, :tensor, "Create from elements"},
-        empty: {:nx, :broadcast, "Create empty tensor"},
-        concat: {:nx, :concatenate, "Concatenate tensors"},
-        pad: {:nx, :pad, "Pad tensor"},
+        addi: {:stablehlo, :add, "arith.addi -> stablehlo.add"},
+        addf: {:stablehlo, :add, "arith.addf -> stablehlo.add"},
+        subi: {:stablehlo, :subtract, "arith.subi -> stablehlo.subtract"},
+        subf: {:stablehlo, :subtract, "arith.subf -> stablehlo.subtract"},
+        muli: {:stablehlo, :multiply, "arith.muli -> stablehlo.multiply"},
+        mulf: {:stablehlo, :multiply, "arith.mulf -> stablehlo.multiply"},
+        divi: {:stablehlo, :divide, "arith.divi -> stablehlo.divide"},
+        divf: {:stablehlo, :divide, "arith.divf -> stablehlo.divide"},
+        cmpi: {:stablehlo, :compare, "arith.cmpi -> stablehlo.compare"},
+        cmpf: {:stablehlo, :compare, "arith.cmpf -> stablehlo.compare"},
+        andi: {:stablehlo, :and, "arith.andi -> stablehlo.and"},
+        ori: {:stablehlo, :or, "arith.ori -> stablehlo.or"},
+        xori: {:stablehlo, :xor, "arith.xori -> stablehlo.xor"},
       },
-      dependencies: [:memref],
-      notes: "Tensor operations compose memref operations with additional utilities"
+      dependencies: [:stablehlo],
+      notes: "Arith dialect emulated using StableHLO operations"
     }
   end
 
-  defp linalg_strategy do
+  defp scf_emulated_via_stablehlo do
     %{
-      approach: :high_level_composition,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        matmul: {:nx, :dot, "Matrix multiplication via Nx.dot"},
-        matvec: {:nx, :dot, "Matrix-vector product"},
-        dot: {:nx, :dot, "Dot product"},
-        conv_2d: {:nx, :conv, "2D convolution"},
-        conv_3d: {:nx, :conv, "3D convolution"},
-        pool_2d: {:nx, :pool, "2D pooling"},
-        fill: {:nx, :broadcast, "Fill tensor with value"},
-        copy: {:nx, :copy, "Copy tensor"},
-        generic: {:custom, :generic, "Generic linalg via composition"},
+        for: {:stablehlo, :while, "scf.for -> stablehlo.while with counter"},
+        if: {:stablehlo, :if, "scf.if -> stablehlo.if"},
+        while: {:stablehlo, :while, "scf.while -> stablehlo.while"},
+        yield: {:stablehlo, :constant, "scf.yield -> return value in stablehlo.while"},
+        parallel: {:stablehlo, :while, "scf.parallel -> stablehlo.while with parallel semantics"},
       },
-      dependencies: [:tensor, :arith, :memref],
-      notes: "Linear algebra operations map to Nx operations or compose from lower-level ops"
+      dependencies: [:stablehlo],
+      notes: "SCF dialect emulated using StableHLO control flow operations"
     }
   end
 
-  defp affine_strategy do
+  defp memref_emulated_via_stablehlo do
     %{
-      approach: :index_computation_emulation,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        affine_map: {:custom, :affine_map, "Affine map computation"},
-        affine_apply: {:custom, :affine_apply, "Apply affine transformation"},
-        affine_for: {:elixir, :for, "Affine for loop"},
-        affine_if: {:elixir, :if, "Affine conditional"},
-        affine_load: {:nx, :tensor_slice, "Load with affine index"},
-        affine_store: {:nx, :put_slice, "Store with affine index"},
+        alloc: {:stablehlo, :constant, "memref.alloc -> stablehlo.constant with shape"},
+        load: {:stablehlo, :gather, "memref.load -> stablehlo.gather"},
+        store: {:stablehlo, :scatter, "memref.store -> stablehlo.scatter"},
+        get_global: {:stablehlo, :constant, "memref.get_global -> stablehlo.constant"},
+        dim: {:stablehlo, :reshape, "memref.dim -> extract from stablehlo tensor shape"},
+        cast: {:stablehlo, :convert, "memref.cast -> stablehlo.convert"},
       },
-      dependencies: [:arith, :memref, :scf],
-      notes: "Affine operations use index computation and compose with memref/scf"
+      dependencies: [:stablehlo],
+      notes: "Memref dialect emulated using StableHLO tensor operations"
     }
   end
 
-  defp vector_strategy do
+  defp func_emulated_via_stablehlo do
     %{
-      approach: :simd_emulation,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        broadcast: {:nx, :broadcast, "Broadcast to vector"},
-        extract: {:nx, :tensor_slice, "Extract element"},
-        insert: {:nx, :put_slice, "Insert element"},
-        fma: {:nx, :multiply_add, "Fused multiply-add"},
-        reduction: {:nx, :reduce, "Vector reduction"},
-        transpose: {:nx, :transpose, "Transpose"},
-        contract: {:nx, :dot, "Vector contraction"},
-        print: {:elixir, :io, "Print vector"},
+        func: {:stablehlo, :func, "func.func -> stablehlo function region"},
+        call: {:stablehlo, :call, "func.call -> stablehlo.call"},
+        return: {:stablehlo, :return, "func.return -> stablehlo return"},
       },
-      dependencies: [:tensor, :arith],
-      notes: "Vector operations map to Nx tensor operations with SIMD semantics"
+      dependencies: [:stablehlo],
+      notes: "Func dialect emulated using StableHLO function operations"
     }
   end
 
-  defp math_strategy do
+  defp tensor_emulated_via_stablehlo do
     %{
-      approach: :direct_mapping,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        abs: {:nx, :abs, "Absolute value"},
-        exp: {:nx, :exp, "Exponential"},
-        exp2: {:nx, :pow, "2^x"},
-        log: {:nx, :log, "Natural logarithm"},
-        log2: {:nx, :log2, "Base-2 logarithm"},
-        log10: {:nx, :log10, "Base-10 logarithm"},
-        powf: {:nx, :pow, "Power"},
-        rsqrt: {:nx, :rsqrt, "Reciprocal square root"},
-        sqrt: {:nx, :sqrt, "Square root"},
-        sin: {:nx, :sin, "Sine"},
-        cos: {:nx, :cos, "Cosine"},
-        tan: {:nx, :tan, "Tangent"},
-        atan: {:nx, :atan, "Arctangent"},
-        atan2: {:nx, :atan2, "Two-argument arctangent"},
-        ceil: {:nx, :ceil, "Ceiling"},
-        floor: {:nx, :floor, "Floor"},
-        round: {:nx, :round, "Round"},
+        extract: {:stablehlo, :gather, "tensor.extract -> stablehlo.gather"},
+        insert: {:stablehlo, :scatter, "tensor.insert -> stablehlo.scatter"},
+        extract_slice: {:stablehlo, :slice, "tensor.extract_slice -> stablehlo.slice"},
+        insert_slice: {:stablehlo, :dynamic_update_slice, "tensor.insert_slice -> stablehlo.dynamic_update_slice"},
+        dim: {:stablehlo, :reshape, "tensor.dim -> extract from stablehlo tensor shape"},
+        rank: {:stablehlo, :reshape, "tensor.rank -> get rank from stablehlo tensor"},
+        from_elements: {:stablehlo, :constant, "tensor.from_elements -> stablehlo.constant"},
+        empty: {:stablehlo, :constant, "tensor.empty -> stablehlo.constant with zeros"},
+        concat: {:stablehlo, :concatenate, "tensor.concat -> stablehlo.concatenate"},
+        pad: {:stablehlo, :pad, "tensor.pad -> stablehlo.pad"},
       },
-      dependencies: [:arith],
-      notes: "Mathematical functions map directly to Nx math operations"
+      dependencies: [:stablehlo],
+      notes: "Tensor dialect emulated using StableHLO tensor operations"
     }
   end
 
-  defp complex_strategy do
+  defp linalg_emulated_via_stablehlo do
     %{
-      approach: :composition_with_arith,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        constant: {:nx, :complex, "Complex constant"},
-        add: {:nx, :add, "Complex addition"},
-        sub: {:nx, :subtract, "Complex subtraction"},
-        mul: {:nx, :multiply, "Complex multiplication"},
-        div: {:nx, :divide, "Complex division"},
-        abs: {:nx, :abs, "Complex absolute value"},
-        angle: {:nx, :angle, "Complex angle"},
-        exp: {:nx, :exp, "Complex exponential"},
-        log: {:nx, :log, "Complex logarithm"},
-        pow: {:nx, :pow, "Complex power"},
-        sqrt: {:nx, :sqrt, "Complex square root"},
-        create: {:nx, :complex, "Create complex from real/imag"},
-        real: {:nx, :real, "Extract real part"},
-        imag: {:nx, :imag, "Extract imaginary part"},
+        matmul: {:stablehlo, :dot_general, "linalg.matmul -> stablehlo.dot_general"},
+        matvec: {:stablehlo, :dot_general, "linalg.matvec -> stablehlo.dot_general"},
+        dot: {:stablehlo, :dot_general, "linalg.dot -> stablehlo.dot_general"},
+        conv_2d: {:stablehlo, :convolution, "linalg.conv_2d -> stablehlo.convolution"},
+        conv_3d: {:stablehlo, :convolution, "linalg.conv_3d -> stablehlo.convolution"},
+        pool_2d: {:stablehlo, :reduce_window, "linalg.pool_2d -> stablehlo.reduce_window"},
+        fill: {:stablehlo, :broadcast_in_dim, "linalg.fill -> stablehlo.broadcast_in_dim"},
+        copy: {:stablehlo, :reshape, "linalg.copy -> stablehlo.reshape"},
+        generic: {:stablehlo, :reduce, "linalg.generic -> stablehlo.reduce"},
       },
-      dependencies: [:arith, :math],
-      notes: "Complex numbers emulated via Nx complex operations or composition"
+      dependencies: [:stablehlo],
+      notes: "Linalg dialect emulated using StableHLO linear algebra operations"
     }
   end
 
-  defp index_strategy do
+  defp affine_emulated_via_stablehlo do
     %{
-      approach: :integer_emulation,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        constant: {:nx, :tensor, "Index constant"},
-        add: {:nx, :add, "Index addition"},
-        sub: {:nx, :subtract, "Index subtraction"},
-        mul: {:nx, :multiply, "Index multiplication"},
-        divs: {:nx, :divide, "Signed division"},
-        divu: {:nx, :divide, "Unsigned division"},
-        rems: {:nx, :rem, "Signed remainder"},
-        remu: {:nx, :rem, "Unsigned remainder"},
-        max: {:nx, :max, "Maximum"},
-        min: {:nx, :min, "Minimum"},
-        cast: {:nx, :as_type, "Index cast"},
+        affine_map: {:stablehlo, :dot_general, "affine.map -> stablehlo operations for index computation"},
+        affine_apply: {:stablehlo, :add, "affine.apply -> stablehlo arithmetic operations"},
+        affine_for: {:stablehlo, :while, "affine.for -> stablehlo.while"},
+        affine_if: {:stablehlo, :if, "affine.if -> stablehlo.if"},
+        affine_load: {:stablehlo, :gather, "affine.load -> stablehlo.gather with computed indices"},
+        affine_store: {:stablehlo, :scatter, "affine.store -> stablehlo.scatter with computed indices"},
       },
-      dependencies: [:arith],
-      notes: "Index operations map to integer arithmetic operations"
+      dependencies: [:stablehlo],
+      notes: "Affine dialect emulated using StableHLO operations with index computation"
     }
   end
 
-  defp shape_strategy do
+  defp vector_emulated_via_stablehlo do
     %{
-      approach: :metadata_operations,
+      approach: :emulate_via_stablehlo,
       operations: %{
-        shape_of: {:nx, :shape, "Get tensor shape"},
-        num_elements: {:nx, :size, "Get number of elements"},
-        rank: {:nx, :rank, "Get tensor rank"},
-        dim: {:nx, :axis_size, "Get dimension size"},
-        from_extents: {:nx, :tensor, "Create from extents"},
-        split_at: {:nx, :split, "Split shape"},
-        concat: {:nx, :concatenate, "Concatenate shapes"},
+        broadcast: {:stablehlo, :broadcast_in_dim, "vector.broadcast -> stablehlo.broadcast_in_dim"},
+        extract: {:stablehlo, :gather, "vector.extract -> stablehlo.gather"},
+        insert: {:stablehlo, :scatter, "vector.insert -> stablehlo.scatter"},
+        fma: {:stablehlo, :multiply, "vector.fma -> stablehlo.multiply + stablehlo.add"},
+        reduction: {:stablehlo, :reduce, "vector.reduction -> stablehlo.reduce"},
+        transpose: {:stablehlo, :transpose, "vector.transpose -> stablehlo.transpose"},
+        contract: {:stablehlo, :dot_general, "vector.contract -> stablehlo.dot_general"},
       },
-      dependencies: [:tensor],
-      notes: "Shape operations work with tensor metadata"
+      dependencies: [:stablehlo],
+      notes: "Vector dialect emulated using StableHLO tensor operations"
+    }
+  end
+
+  defp math_emulated_via_stablehlo do
+    %{
+      approach: :emulate_via_stablehlo,
+      operations: %{
+        abs: {:stablehlo, :abs, "math.abs -> stablehlo.abs"},
+        exp: {:stablehlo, :exp, "math.exp -> stablehlo.exp"},
+        exp2: {:stablehlo, :pow, "math.exp2 -> stablehlo.pow"},
+        log: {:stablehlo, :log, "math.log -> stablehlo.log"},
+        log2: {:stablehlo, :log, "math.log2 -> stablehlo.log with base conversion"},
+        log10: {:stablehlo, :log, "math.log10 -> stablehlo.log with base conversion"},
+        powf: {:stablehlo, :pow, "math.powf -> stablehlo.pow"},
+        rsqrt: {:stablehlo, :rsqrt, "math.rsqrt -> stablehlo.rsqrt"},
+        sqrt: {:stablehlo, :sqrt, "math.sqrt -> stablehlo.sqrt"},
+        sin: {:stablehlo, :sin, "math.sin -> stablehlo.sin"},
+        cos: {:stablehlo, :cos, "math.cos -> stablehlo.cos"},
+        tan: {:stablehlo, :divide, "math.tan -> stablehlo.sin / stablehlo.cos"},
+        atan: {:stablehlo, :atan2, "math.atan -> stablehlo.atan2"},
+        atan2: {:stablehlo, :atan2, "math.atan2 -> stablehlo.atan2"},
+        ceil: {:stablehlo, :ceil, "math.ceil -> stablehlo.ceil (if available) or compose"},
+        floor: {:stablehlo, :floor, "math.floor -> stablehlo.floor (if available) or compose"},
+        round: {:stablehlo, :round, "math.round -> stablehlo.round (if available) or compose"},
+      },
+      dependencies: [:stablehlo],
+      notes: "Math dialect emulated using StableHLO mathematical functions"
+    }
+  end
+
+  defp complex_emulated_via_stablehlo do
+    %{
+      approach: :emulate_via_stablehlo,
+      operations: %{
+        constant: {:stablehlo, :complex, "complex.constant -> stablehlo.complex"},
+        add: {:stablehlo, :add, "complex.add -> stablehlo.add"},
+        sub: {:stablehlo, :subtract, "complex.sub -> stablehlo.subtract"},
+        mul: {:stablehlo, :multiply, "complex.mul -> stablehlo.multiply"},
+        div: {:stablehlo, :divide, "complex.div -> stablehlo.divide"},
+        abs: {:stablehlo, :abs, "complex.abs -> stablehlo.abs"},
+        exp: {:stablehlo, :exp, "complex.exp -> stablehlo.exp"},
+        log: {:stablehlo, :log, "complex.log -> stablehlo.log"},
+        pow: {:stablehlo, :pow, "complex.pow -> stablehlo.pow"},
+        sqrt: {:stablehlo, :sqrt, "complex.sqrt -> stablehlo.sqrt"},
+        real: {:stablehlo, :real, "complex.real -> stablehlo.real"},
+        imag: {:stablehlo, :imag, "complex.imag -> stablehlo.imag"},
+      },
+      dependencies: [:stablehlo],
+      notes: "Complex dialect emulated using StableHLO complex operations"
+    }
+  end
+
+  defp index_emulated_via_stablehlo do
+    %{
+      approach: :emulate_via_stablehlo,
+      operations: %{
+        constant: {:stablehlo, :constant, "index.constant -> stablehlo.constant"},
+        add: {:stablehlo, :add, "index.add -> stablehlo.add"},
+        sub: {:stablehlo, :subtract, "index.sub -> stablehlo.subtract"},
+        mul: {:stablehlo, :multiply, "index.mul -> stablehlo.multiply"},
+        divs: {:stablehlo, :divide, "index.divs -> stablehlo.divide"},
+        divu: {:stablehlo, :divide, "index.divu -> stablehlo.divide"},
+        rems: {:stablehlo, :remainder, "index.rems -> stablehlo.remainder"},
+        remu: {:stablehlo, :remainder, "index.remu -> stablehlo.remainder"},
+        max: {:stablehlo, :max, "index.max -> stablehlo.max"},
+        min: {:stablehlo, :min, "index.min -> stablehlo.min"},
+        cast: {:stablehlo, :convert, "index.cast -> stablehlo.convert"},
+      },
+      dependencies: [:stablehlo],
+      notes: "Index dialect emulated using StableHLO arithmetic operations"
+    }
+  end
+
+  defp shape_emulated_via_stablehlo do
+    %{
+      approach: :emulate_via_stablehlo,
+      operations: %{
+        shape_of: {:stablehlo, :reshape, "shape.shape_of -> extract from stablehlo tensor"},
+        num_elements: {:stablehlo, :reduce, "shape.num_elements -> compute from stablehlo tensor"},
+        rank: {:stablehlo, :reshape, "shape.rank -> get rank from stablehlo tensor"},
+        dim: {:stablehlo, :reshape, "shape.dim -> extract dimension from stablehlo tensor"},
+        from_extents: {:stablehlo, :iota, "shape.from_extents -> stablehlo.iota"},
+        split_at: {:stablehlo, :slice, "shape.split_at -> stablehlo.slice"},
+        concat: {:stablehlo, :concatenate, "shape.concat -> stablehlo.concatenate"},
+      },
+      dependencies: [:stablehlo],
+      notes: "Shape dialect emulated using StableHLO tensor shape operations"
     }
   end
 
@@ -292,8 +375,10 @@ defmodule ExMLIR.DialectStrategy do
 
   @doc """
   Checks if a dialect can be emulated given available dependencies.
+
+  By default, only StableHLO is available (the only directly supported dialect).
   """
-  def can_emulate?(dialect, available_dialects \\ [:arith, :scf, :memref, :func]) do
+  def can_emulate?(dialect, available_dialects \\ [:stablehlo]) do
     case Map.get(strategies(), dialect) do
       nil -> false
       strategy ->
