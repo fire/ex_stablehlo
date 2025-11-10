@@ -199,8 +199,6 @@ The `ExMLIR.DialectEmulator` module provides:
 
 This is an early version of the library with the following limitations:
 
-- Core dialects (arith, scf, memref, func) are fully implemented
-- Additional dialects use emulation strategies (may have limitations)
 - Simplified parsing (may not handle all MLIR syntax variations)
 - Basic control flow translation (loops and conditionals need more work)
 - Memory operations are mapped to Nx tensors (may not be optimal for all use cases)
@@ -211,7 +209,6 @@ This is an early version of the library with the following limitations:
 Contributions are welcome! Areas that need work:
 
 - More comprehensive MLIR parsing
-- Additional dialect support
 - Better control flow translation
 - Performance optimizations
 - Test coverage
