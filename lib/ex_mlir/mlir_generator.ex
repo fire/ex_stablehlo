@@ -45,7 +45,10 @@ defmodule ExMLIR.MLIRGenerator do
   defp map_arith_to_stablehlo(:mulf), do: :multiply
   defp map_arith_to_stablehlo(:divi), do: :divide
   defp map_arith_to_stablehlo(:divf), do: :divide
-  defp map_arith_to_stablehlo(_), do: :add
+  defp map_arith_to_stablehlo(_) do
+    # TODO: Handle unknown arith operation - defaulting to add
+    :add
+  end
 
   defp generate_operation({:memref, op, result, args}) do
     # TODO: Implement memref operation generation
