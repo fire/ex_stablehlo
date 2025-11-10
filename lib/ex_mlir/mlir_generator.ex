@@ -62,6 +62,7 @@ defmodule ExMLIR.MLIRGenerator do
   end
 
   defp generate_operation({:return, value, type}) do
+    # TODO: Handle return operation generation properly
     type_str = format_type(type)
     "  return #{value} : #{type_str}"
   end

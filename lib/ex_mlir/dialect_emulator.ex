@@ -18,6 +18,7 @@ defmodule ExMLIR.DialectEmulator do
   def emulate(dialect, operation, operands, state, mode) do
     case DialectStrategy.get_operation_strategy(dialect, operation) do
       nil ->
+        # TODO: Handle unsupported operation - return error
         {:error, {:unsupported_operation, dialect, operation}}
 
       {target_module, target_op, _description} ->
@@ -44,12 +45,13 @@ defmodule ExMLIR.DialectEmulator do
         emulate_while(operands, state, mode)
 
       _ ->
+        # TODO: Handle unsupported Elixir operation - return error
         {:error, {:unsupported_elixir_op, op}}
     end
   end
 
   defp apply_emulation(:custom, op, operands, state, mode) do
-    # Custom emulation via composition
+    # TODO: Custom emulation via composition
     case op do
       :affine_map ->
         emulate_affine_map(operands, state, mode)
@@ -61,6 +63,7 @@ defmodule ExMLIR.DialectEmulator do
         emulate_generic_linalg(operands, state, mode)
 
       _ ->
+        # TODO: Handle unsupported custom operation - return error
         {:error, {:unsupported_custom_op, op}}
     end
   end
@@ -155,7 +158,8 @@ defmodule ExMLIR.DialectEmulator do
   multiple lower-level operations.
   """
   def compose_operations(operations) when is_list(operations) do
-    # Chain operations together
+    # TODO: Chain operations together
+    # TODO: Initial accumulator is nil - ensure this is handled correctly
     Enum.reduce(operations, nil, fn op, acc ->
       case acc do
         nil -> op
@@ -176,6 +180,7 @@ defmodule ExMLIR.DialectEmulator do
   Useful for adapting operations to match Nx/Axon semantics.
   """
   def transform_operation(operation, transform_fn) do
+    # TODO: Add validation and error handling for transformation
     transform_fn.(operation)
   end
 end
