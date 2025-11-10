@@ -1,0 +1,187 @@
+; StableHLO ABNF Grammar
+; Based on StableHLO Specification (https://github.com/openxla/stablehlo)
+; Converted from EBNF to ABNF for use with ex_abnf
+
+; ============================================================================
+; Program Structure
+; ============================================================================
+
+Program = *Func
+
+Func = "func" "." "func" FuncId FuncInputs FuncOutputs "{" FuncBody "}"
+
+FuncInputs = "(" [FuncInput *("," FuncInput)] ")"
+
+FuncInput = ValueId ":" ValueType
+
+FuncOutputs = ["->" FuncOutput *("," FuncOutput)]
+
+FuncOutput = ValueType
+
+FuncBody = *Op
+
+; ============================================================================
+; Identifiers
+; ============================================================================
+
+FuncId = "@" letter *(letter / digit)
+
+ValueId = "%" 1*digit / "%" letter *(letter / digit)
+
+letter = ALPHA / "_"
+
+digit = DIGIT
+
+; ============================================================================
+; Types
+; ============================================================================
+
+Type = ValueType / NonValueType
+
+ValueType = TensorType / QuantizedTensorType / TokenType / TupleType / BufferType
+
+NonValueType = TensorElementType / QuantizedTensorElementType / FunctionType / StringType
+
+TensorType = "tensor" "<" Shape TensorElementType ">"
+
+Shape = *DimensionSize "x"
+
+DimensionSize = 1*digit / "?"
+
+QuantizedTensorType = "tensor" "<" Shape QuantizedTensorElementType ">"
+
+QuantizedTensorElementType = "!quant.uniform" "<" QuantizationStorageType ["<" QuantizationStorageMin ":" QuantizationStorageMax ">"] ":" QuantizationExpressedType [":" QuantizationDimension] "," QuantizationParameters ">"
+
+QuantizationStorageType = IntegerType
+
+QuantizationStorageMin = IntegerLiteral
+
+QuantizationStorageMax = IntegerLiteral
+
+QuantizationExpressedType = FloatType
+
+QuantizationDimension = IntegerLiteral
+
+QuantizationParameters = QuantizationParameter / "{" QuantizationParameter *("," QuantizationParameter) "}"
+
+QuantizationParameter = QuantizationScale [":" QuantizationZeroPoint]
+
+QuantizationScale = FloatLiteral
+
+QuantizationZeroPoint = IntegerLiteral
+
+TokenType = "token"
+
+TupleType = "tuple" "<" *ValueType "," ">"
+
+BufferType = "buffer" "<" Shape TensorElementType ">"
+
+TensorElementType = IntegerType / FloatType / ComplexType / BooleanType
+
+IntegerType = "i" 1*digit / "si" 1*digit / "ui" 1*digit
+
+FloatType = "f" 1*digit / "bf" 1*digit / "f8E5M2FNUZ" / "f8E4M3FNUZ" / "f8E4M3FN" / "f8E5M2" / "f8E4M3FN" / "f8E4M3B11FNUZ" / "f16" / "bf16" / "f32" / "tf32" / "f64" / "f4E2M1FN" / "f6E2M3FN" / "f6E3M2FN" / "f8E8M0FNU"
+
+ComplexType = "complex" "<" FloatType ">"
+
+BooleanType = "i1"
+
+FunctionType = "(" InputTypes ")" "->" "(" OutputTypes ")"
+
+InputTypes = [ValueType *("," ValueType)]
+
+OutputTypes = [ValueType *("," ValueType)]
+
+StringType = "string"
+
+; ============================================================================
+; Operations
+; ============================================================================
+
+Op = [OpOutputs] OpName OpInputs ":" OpSignature
+
+OpName = DQUOTE "stablehlo" "." OpMnemonic DQUOTE
+
+OpMnemonic = "abs" / "add" / "and" / "atan2" / "batch_norm_grad" / "batch_norm_inference" / "batch_norm_training" / "bitcast_convert" / "broadcast_in_dim" / "case" / "cbrt" / "ceil" / "cholesky" / "clamp" / "clz" / "compare" / "complex" / "concatenate" / "constant" / "convolution" / "cosine" / "count_leading_zeros" / "count_trailing_zeros" / "custom_call" / "divide" / "dot_general" / "dynamic_conv" / "dynamic_gather" / "dynamic_iota" / "dynamic_pad" / "dynamic_slice" / "dynamic_update_slice" / "exponential" / "exponential_minus_one" / "fft" / "floor" / "gather" / "get_dimension_size" / "get_tuple_element" / "if" / "imag" / "iota" / "is_finite" / "log" / "log_plus_one" / "logistic" / "map" / "maximum" / "minimum" / "multiply" / "negate" / "not" / "or" / "pad" / "popcnt" / "power" / "real" / "reduce" / "reduce_precision" / "reduce_scatter" / "reduce_window" / "remainder" / "reshape" / "reverse" / "rng" / "rng_bit_generator" / "round_nearest_afz" / "round_nearest_even" / "rsqrt" / "scatter" / "select" / "select_and_scatter" / "send" / "set_dimension_size" / "shift_left" / "shift_right_arithmetic" / "shift_right_logical" / "sign" / "sine" / "slice" / "sort" / "sqrt" / "subtract" / "tanh" / "top_k" / "transpose" / "triangular_solve" / "tuple" / "while" / "xor"
+
+OpInputs = OpInputValues OpInputFuncs OpInputAttrs
+
+OpInputValues = "(" [OpInputValue *("," OpInputValue)] ")"
+
+OpInputValue = ValueId
+
+OpInputFuncs = ["(" OpInputFunc *("," OpInputFunc) ")"]
+
+OpInputFunc = "{" Unused FuncInputs ":" FuncBody "}"
+
+Unused = "^" 1*digit / "^" letter *(letter / digit)
+
+OpInputAttrs = ["{" OpInputAttr *("," OpInputAttr) "}"]
+
+OpInputAttr = OpInputAttrName "=" OpInputAttrValue
+
+OpInputAttrName = letter *(letter / digit)
+
+OpInputAttrValue = Constant
+
+OpOutputs = [OpOutput *("," OpOutput) "="]
+
+OpOutput = ValueId
+
+OpSignature = "(" [ValueType *("," ValueType)] ")" "->" "(" [ValueType *("," ValueType)] ")"
+
+; ============================================================================
+; Constants
+; ============================================================================
+
+Constant = IntegerLiteral / FloatLiteral / BooleanLiteral / StringLiteral / DenseElementsAttr / SparseElementsAttr / ArrayAttr / DictionaryAttr
+
+IntegerLiteral = ["-"] 1*digit
+
+FloatLiteral = ["-"] 1*digit "." 1*digit [("e" / "E") ["-"] 1*digit]
+
+BooleanLiteral = "true" / "false"
+
+StringLiteral = DQUOTE *CHAR DQUOTE
+
+DenseElementsAttr = "dense" "<" DenseElements ">" ":" ValueType
+
+DenseElements = [DenseElement *("," DenseElement)]
+
+DenseElement = IntegerLiteral / FloatLiteral / BooleanLiteral
+
+SparseElementsAttr = "sparse" "<" DenseElements "," DenseElements ">" ":" ValueType
+
+ArrayAttr = "array" "<" ArrayElementType ":" ArrayElements ">"
+
+ArrayElementType = "i" 1*digit / "f" 1*digit / "i1"
+
+ArrayElements = [ArrayElement *("," ArrayElement)]
+
+ArrayElement = IntegerLiteral / FloatLiteral / BooleanLiteral
+
+DictionaryAttr = "{" [DictionaryEntry *("," DictionaryEntry)] "}"
+
+DictionaryEntry = DictionaryKey "=" DictionaryValue
+
+DictionaryKey = letter *(letter / digit)
+
+DictionaryValue = Constant
+
+; ============================================================================
+; Return Operation
+; ============================================================================
+
+ReturnOp = "func.return" [OpInputValues] ":" OpSignature
+
+; ============================================================================
+; Comments and Whitespace
+; ============================================================================
+
+Comment = "//" *CHAR
+
+WS = 1*SP
+
+; Note: ABNF doesn't have built-in whitespace handling, so we'll handle
+; this in the parser implementation
+

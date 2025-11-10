@@ -29,8 +29,8 @@ defmodule ExMLIR.MixProject do
   defp deps do
     [
       {:nx, "~> 0.6"},
-      {:axon, "~> 0.6"},
       {:sourceror, "~> 1.10"},
+      {:ex_abnf, "~> 0.3.0"},
       {:ex_doc, "~> 0.30", only: :dev, runtime: false}
     ]
   end
