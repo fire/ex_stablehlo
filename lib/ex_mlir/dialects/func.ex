@@ -21,8 +21,8 @@ defmodule ExMLIR.Dialects.Func do
   end
 
   defp translate_to_nx_function(name, args, return_type, ops, state) do
-    # Build Nx defn function
-    # This is a simplified version - in practice would need more sophisticated
+    # TODO: Build Nx defn function
+    # TODO: This is a simplified version - in practice would need more sophisticated
     # translation of the operation sequence
     inputs_arg = ASTBuilder.var(:inputs)
     body = ASTBuilder.enum_at(inputs_arg, ASTBuilder.literal(0))
@@ -33,13 +33,13 @@ defmodule ExMLIR.Dialects.Func do
   end
 
   defp translate_to_elixir_function(name, args, return_type, ops, state) do
-    # Build Elixir function AST using Sourceror
+    # TODO: Build Elixir function AST using Sourceror
     arg_names = Enum.map(args, fn {:arg, _type} ->
       arg_name = String.to_atom("arg_#{length(state.ast || [])}")
       {arg_name, [line: 1], nil}
     end)
 
-    # Simplified body - in practice would translate ops
+    # TODO: Simplified body - in practice would translate ops
     body = ASTBuilder.literal(nil)
     
     func_ast = ASTBuilder.defun(name, arg_names, body)

@@ -73,7 +73,7 @@ defmodule ExMLIR.Translator do
           %{new_st | variables: new_vars}
 
         _ ->
-          {acc, st}
+          {acc, st}  # TODO: Handle unknown AST node types
       end
     end)
   end

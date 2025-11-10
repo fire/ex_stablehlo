@@ -29,7 +29,7 @@ defmodule ExMLIR.Dialects.Arith do
       :xori -> translate_bitwise(resolved_ops, result, type, new_state, mode, :bxor)
       :shli -> translate_shift(resolved_ops, result, type, new_state, mode, :left)
       :shri -> translate_shift(resolved_ops, result, type, new_state, mode, :right)
-      _ -> {nil, new_state}
+      _ -> {nil, new_state}  # TODO: Implement remaining arith operations
     end
   end
 
@@ -98,7 +98,7 @@ defmodule ExMLIR.Dialects.Arith do
   end
 
   defp translate_cmp([a, b], result, _type, state, mode) do
-    # Comparison operations - simplified, would need predicate parsing
+    # TODO: Comparison operations - simplified, would need predicate parsing
     expr = ASTBuilder.nx_call(:greater, [a, b])
     var_name = String.to_atom("var_#{result}")
     

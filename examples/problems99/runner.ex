@@ -126,6 +126,7 @@ defmodule ExMLIR.Examples.Problems99.Runner do
         end
 
       false ->
+        # TODO: Problem not implemented
         IO.puts("○ Problem #{problem_num} - Not implemented")
         %{problem: problem_num, status: :not_implemented}
     end

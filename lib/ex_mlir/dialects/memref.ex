@@ -19,7 +19,7 @@ defmodule ExMLIR.Dialects.Memref do
       :get_global -> translate_get_global(result, args, state, mode)
       :dim -> translate_dim(result, args, state, mode)
       :cast -> translate_cast(result, args, state, mode)
-      _ -> {nil, state}
+      _ -> {nil, state}  # TODO: Implement remaining memref operations
     end
   end
 
@@ -158,11 +158,11 @@ defmodule ExMLIR.Dialects.Memref do
   end
 
   defp parse_alloc_args(args) do
-    # Simplified parsing - would need more sophisticated parsing
+    # TODO: Simplified parsing - would need more sophisticated parsing
     # memref.alloc() : memref<10x20xf32>
     if length(args) > 0 do
-      # Extract shape and type from memref type string
-      {[10, 20], :f32}  # Placeholder
+      # TODO: Extract shape and type from memref type string
+      {[10, 20], :f32}  # TODO: Placeholder - implement proper parsing
     else
       nil
     end

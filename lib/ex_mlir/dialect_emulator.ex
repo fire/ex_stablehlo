@@ -118,8 +118,8 @@ defmodule ExMLIR.DialectEmulator do
 
   defp emulate_affine_map([map_expr, dims], state, mode) do
     # TODO: Affine map: compute indices using affine expressions
-    # This would need a more sophisticated implementation
-    # For now, return a placeholder
+    # TODO: This would need a more sophisticated implementation
+    # TODO: For now, return a placeholder
     {ASTBuilder.literal(nil), state}
   end
 
@@ -166,7 +166,7 @@ defmodule ExMLIR.DialectEmulator do
 
   defp apply_operation(prev, next) do
     # TODO: Apply next operation to previous result
-    # This is a simplified version
+    # TODO: This is a simplified version
     next
   end
 

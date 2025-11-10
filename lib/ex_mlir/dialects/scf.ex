@@ -14,27 +14,27 @@ defmodule ExMLIR.Dialects.SCF do
       :if -> translate_if(line, state, mode)
       :while -> translate_while(line, state, mode)
       :yield -> translate_yield(line, state, mode)
-      _ -> {nil, state}
+      _ -> {nil, state}  # TODO: Implement remaining SCF operations
     end
   end
 
   defp translate_for(line, state, mode) do
-    # Parse scf.for loop structure
+    # TODO: Parse scf.for loop structure
     # scf.for %iv = %c0 to %c10 step %c1 iter_args(%arg = %init) -> (i32) {
     #   ...
     # }
     case Regex.run(~r/scf\.for\s+%(\w+)\s*=\s*(.+?)\s+to\s+(.+?)\s+step\s+(.+?)\s+iter_args/, line) do
       [_, iv, lower, upper, step] ->
-        # Simplified translation - in practice would need to parse body
+        # TODO: Simplified translation - in practice would need to parse body
         case mode do
           :nx ->
-            # Use Nx's while loop or recursion
+            # TODO: Use Nx's while loop or recursion
             expr = quote do
               Nx.while(
                 fn {iv, acc} -> Nx.less(iv, unquote(upper)) end,
                 fn {iv, acc} ->
                   new_iv = Nx.add(iv, unquote(step))
-                  new_acc = # body computation
+                  new_acc = # TODO: body computation
                   {new_iv, new_acc}
                 end,
                 {unquote(lower), initial_value}
@@ -46,7 +46,7 @@ defmodule ExMLIR.Dialects.SCF do
             code = """
             # scf.for loop
             Enum.reduce(#{lower}..#{upper}//#{step}, initial_value, fn #{iv}, acc ->
-              # loop body
+              # TODO: loop body
               acc
             end)
             """
@@ -55,12 +55,12 @@ defmodule ExMLIR.Dialects.SCF do
         end
 
       _ ->
-        {nil, state}
+        {nil, state}  # TODO: Handle parse failure
     end
   end
 
   defp translate_if(line, state, mode) do
-    # Parse scf.if conditional
+    # TODO: Parse scf.if conditional
     # scf.if %condition -> (i32) {
     #   ...
     # } else {
@@ -70,7 +70,7 @@ defmodule ExMLIR.Dialects.SCF do
       [_, condition] ->
         case mode do
           :nx ->
-            # Use Nx.select for conditional
+            # TODO: Use Nx.select for conditional
             expr = quote do
               Nx.select(
                 unquote(condition),
@@ -83,9 +83,9 @@ defmodule ExMLIR.Dialects.SCF do
           :elixir ->
             code = """
             if #{condition} do
-              # true branch
+              # TODO: true branch
             else
-              # false branch
+              # TODO: false branch
             end
             """
             new_code = [code | (state.code || [])]
@@ -93,12 +93,12 @@ defmodule ExMLIR.Dialects.SCF do
         end
 
       _ ->
-        {nil, state}
+        {nil, state}  # TODO: Handle parse failure
     end
   end
 
   defp translate_while(line, state, mode) do
-    # Parse scf.while loop
+    # TODO: Parse scf.while loop
     # scf.while (%arg = %init) : (i32) -> (i32) {
     #   ^bb0(%arg: i32):
     #     %condition = ...
@@ -122,7 +122,7 @@ defmodule ExMLIR.Dialects.SCF do
         code = """
         # scf.while loop
         Stream.iterate(initial_value, fn arg ->
-          # body computation
+          # TODO: body computation
           new_arg
         end)
         |> Enum.find(fn arg -> condition(arg) end)
@@ -148,7 +148,7 @@ defmodule ExMLIR.Dialects.SCF do
         end
 
       _ ->
-        {nil, state}
+        {nil, state}  # TODO: Handle parse failure
     end
   end
 end

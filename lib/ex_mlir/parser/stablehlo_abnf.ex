@@ -61,7 +61,7 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   depending on the serialization format used.
   """
   def parse_bytes(bytes) when is_binary(bytes) do
-    # Convert bytes to text if needed, or handle binary format
+    # TODO: Convert bytes to text if needed, or handle binary format
     # For now, we'll assume bytes can be converted to text
     text = if String.valid?(bytes), do: bytes, else: decode_bytes(bytes)
     parse_text(text)
@@ -255,7 +255,7 @@ defmodule ExMLIR.Parser.StableHLOABNF do
   end
 
   defp extract_types_from_signature(children, direction) do
-    # This is simplified - actual implementation would parse the signature more carefully
+    # TODO: This is simplified - actual implementation would parse the signature more carefully
     types = extract_list(children, "ValueType")
     Enum.map(types, &normalize_type/1)
   end
