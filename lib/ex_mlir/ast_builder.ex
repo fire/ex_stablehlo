@@ -108,7 +108,9 @@ defmodule ExMLIR.ASTBuilder do
       arg when is_atom(arg) -> {arg, [line: 1], nil}
       arg when is_integer(arg) or is_float(arg) or is_binary(arg) -> arg
       arg when is_tuple(arg) -> arg
-      arg -> arg
+      arg ->
+        # TODO: Handle unknown argument format - returning as-is
+        arg
     end)
   end
 

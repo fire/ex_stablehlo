@@ -27,13 +27,13 @@ defmodule ExMLIR.DialectEmulator do
   end
 
   defp apply_emulation(:nx, op, operands, state, mode) do
-    # Direct Nx mapping
+    # TODO: Direct Nx mapping - add validation and error handling
     expr = ASTBuilder.nx_call(op, operands)
     {expr, state}
   end
 
   defp apply_emulation(:elixir, op, operands, state, mode) do
-    # Elixir construct emulation
+    # TODO: Elixir construct emulation - ensure all cases are handled
     case op do
       :reduce ->
         emulate_reduce(operands, state, mode)
@@ -73,15 +73,15 @@ defmodule ExMLIR.DialectEmulator do
   # ============================================================================
 
   defp emulate_reduce([collection, initial, reducer], state, mode) do
-    # Emulate reduce using Enum.reduce or Nx operations
+    # TODO: Emulate reduce using Enum.reduce or Nx operations
     case mode do
       :nx ->
-        # Use Nx.reduce for tensor reduction
+        # TODO: Use Nx.reduce for tensor reduction - validate operands
         expr = ASTBuilder.nx_call(:reduce, [collection, initial, reducer])
         {expr, state}
 
       :elixir ->
-        # Use Enum.reduce for list reduction
+        # TODO: Use Enum.reduce for list reduction - validate operands
         reduce_ast = ASTBuilder.call(:Enum, :reduce, [collection, initial, reducer])
         {reduce_ast, state}
     end
@@ -90,12 +90,12 @@ defmodule ExMLIR.DialectEmulator do
   defp emulate_if([condition, true_branch, false_branch], state, mode) do
     case mode do
       :nx ->
-        # Use Nx.select for conditional
+        # TODO: Use Nx.select for conditional - validate operands
         expr = ASTBuilder.nx_call(:select, [condition, true_branch, false_branch])
         {expr, state}
 
       :elixir ->
-        # Use Elixir if/else
+        # TODO: Use Elixir if/else - validate operands
         if_ast = {:if, [line: 1], [
           condition,
           [do: true_branch, else: false_branch]
@@ -107,12 +107,12 @@ defmodule ExMLIR.DialectEmulator do
   defp emulate_while([condition, body, initial], state, mode) do
     case mode do
       :nx ->
-        # Use Nx.while
+        # TODO: Use Nx.while - validate operands
         expr = ASTBuilder.nx_call(:while, [condition, body, initial])
         {expr, state}
 
       :elixir ->
-        # Use Stream.iterate with condition
+        # TODO: Use Stream.iterate with condition - validate operands
         iterate_ast = ASTBuilder.call(:Stream, :iterate, [initial, body])
         find_ast = ASTBuilder.call(:Enum, :find, [iterate_ast, condition])
         {find_ast, state}
