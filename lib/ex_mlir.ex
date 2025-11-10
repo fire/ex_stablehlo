@@ -1,9 +1,9 @@
 defmodule ExMLIR do
   @moduledoc """
-  ExMLIR - Convert MLIR to Axon and Elixir to MLIR
+  ExMLIR - Convert MLIR (StableHLO) to Elixir/Nx and Elixir to MLIR
 
   This library provides functionality to:
-  - Parse MLIR code (StableHLO) and convert it to Axon models
+  - Parse MLIR code (StableHLO) and convert it to Elixir/Nx code
   - Parse Elixir code and convert it to MLIR (StableHLO)
 
   ## Supported Dialects
@@ -12,13 +12,15 @@ defmodule ExMLIR do
 
   ## Examples
 
-  ### MLIR to Axon
+  ### MLIR to Elixir/Nx
 
       iex> mlir_code = \"""
       ...> stablehlo.add %arg0, %arg1 : tensor<f32>
       ...> \"""
-      iex> ExMLIR.to_axon(mlir_code)
-      # Returns Axon model
+      iex> ExMLIR.to_elixir(mlir_code)
+      # Returns Elixir code string
+      iex> ExMLIR.to_nx(mlir_code)
+      # Returns Nx computation function
 
   ### Elixir to MLIR
 
@@ -29,9 +31,6 @@ defmodule ExMLIR do
       ...> \"""
       iex> ExMLIR.from_elixir(elixir_code)
       # Returns MLIR (StableHLO) code string
-
-      iex> ExMLIR.from_axon(axon_model)
-      # Returns MLIR code from Axon model
   """
 
   alias ExMLIR.Parser
@@ -40,20 +39,31 @@ defmodule ExMLIR do
   alias ExMLIR.AxonToMLIR
 
   @doc """
-  Converts MLIR code to Axon model.
+  Converts MLIR code to Elixir code string.
 
-  Returns an Axon model that can be used for training or inference.
+  Returns a string containing Elixir code that can be evaluated.
   """
-  def to_axon(mlir_code) when is_binary(mlir_code) do
+  def to_elixir(mlir_code) when is_binary(mlir_code) do
     mlir_code
     |> Parser.parse()
-    |> Translator.to_axon()
+    |> Translator.to_elixir()
+  end
+
+  @doc """
+  Converts MLIR code to Nx computation function.
+
+  Returns a function that takes input tensors and returns output tensors.
+  """
+  def to_nx(mlir_code) when is_binary(mlir_code) do
+    mlir_code
+    |> Parser.parse()
+    |> Translator.to_nx()
   end
 
   @doc """
   Converts Elixir code to MLIR code string.
 
-  Parses Elixir code (typically Axon/Nx operations) and converts to MLIR (StableHLO).
+  Parses Elixir code (typically Nx operations) and converts to MLIR (StableHLO).
   """
   def from_elixir(elixir_code) when is_binary(elixir_code) do
     case ElixirParser.parse(elixir_code) do
@@ -63,15 +73,6 @@ defmodule ExMLIR do
       {:error, _} = error ->
         error
     end
-  end
-
-  @doc """
-  Converts an Axon model to MLIR code string.
-
-  Takes an Axon model and converts it to MLIR (StableHLO) representation.
-  """
-  def from_axon(model) do
-    AxonToMLIR.convert(model)
   end
 
   @doc """

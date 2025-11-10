@@ -1,13 +1,13 @@
 # ExMLIR
 
-A library for converting MLIR (StableHLO) to Axon models and Elixir code to MLIR. This library focuses on neural network model conversion, enabling translation between MLIR's StableHLO operations and Elixir's Axon framework.
+A library for converting MLIR (StableHLO) to Elixir/Nx and Elixir code to MLIR. This library enables bidirectional translation between MLIR's StableHLO operations and Elixir's Nx numerical computing library.
 
 ## Features
 
-- **MLIR to Axon**: Convert MLIR (StableHLO) code to Axon neural network models
+- **MLIR to Elixir/Nx**: Convert MLIR (StableHLO) code to Elixir code strings and Nx computation functions
 - **Elixir to MLIR**: Parse Elixir code and convert to MLIR (StableHLO) representation
 - **MLIR Parser**: Parses MLIR text format (StableHLO) into an abstract syntax tree
-- **Elixir Parser**: Parses Elixir code (using Sourceror) to extract Axon/Nx operations
+- **Elixir Parser**: Parses Elixir code (using Sourceror) to extract Nx operations
 - **StableHLO Support**: Only StableHLO is directly supported; all other MLIR dialects are emulated via StableHLO
 - **AST Generation**: Uses [Sourceror](https://hex.pm/packages/sourceror) for proper Elixir AST construction
 
@@ -20,7 +20,6 @@ def deps do
   [
     {:ex_mlir, "~> 0.1.0"},
     {:nx, "~> 0.6"},
-    {:axon, "~> 0.6"},
     {:sourceror, "~> 1.10"}
   ]
 end
@@ -28,15 +27,24 @@ end
 
 ## Usage
 
-### MLIR to Axon
+### MLIR to Elixir/Nx
 
 ```elixir
 mlir_code = """
-stablehlo.add %arg0, %arg1 : tensor<f32>
+func.func @add(%arg0: tensor<f32>, %arg1: tensor<f32>) -> tensor<f32> {
+  %0 = stablehlo.add %arg0, %arg1 : tensor<f32>
+  func.return %0 : tensor<f32>
+}
 """
 
-# Convert to Axon model
-axon_model = ExMLIR.to_axon(mlir_code)
+# Convert to Elixir code string
+elixir_code = ExMLIR.to_elixir(mlir_code)
+# => "def add(inputs) do\n  Nx.add(Enum.at(inputs, 0), Enum.at(inputs, 1))\nend"
+
+# Convert to Nx computation function
+nx_func = ExMLIR.to_nx(mlir_code)
+result = nx_func.(Nx.tensor(1.0), Nx.tensor(2.0))
+# => #Nx.Tensor<f32[1.0]>
 ```
 
 ### Elixir to MLIR
@@ -50,13 +58,7 @@ end
 
 # Convert to MLIR (StableHLO)
 mlir_code = ExMLIR.from_elixir(elixir_code)
-
-# Convert Axon model to MLIR
-model = Axon.input("input", shape: {nil, 784})
-  |> Axon.dense(128)
-  |> Axon.dense(10, activation: :softmax)
-
-mlir_code = ExMLIR.from_axon(model)
+# => Returns MLIR code string with StableHLO operations
 ```
 
 ### Supported Operations
@@ -103,8 +105,8 @@ The library is organized into several key modules:
 - **`ExMLIR.DialectEmulator`**: Runtime emulation engine for dialect operations
 
 ### Conversion Modules
-- **`ExMLIR.ElixirParser`**: Parses Elixir code to extract Axon/Nx operations
-- **`ExMLIR.AxonToMLIR`**: Converts Axon models and Elixir operations to MLIR (StableHLO)
+- **`ExMLIR.ElixirParser`**: Parses Elixir code to extract Nx operations
+- **`ExMLIR.AxonToMLIR`**: Converts Elixir operations to MLIR (StableHLO)
 
 ## Related Projects
 

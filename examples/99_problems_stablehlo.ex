@@ -4,7 +4,33 @@ defmodule ExMLIR.Examples.Problems99StableHLO do
 
   All solutions are implemented using ONLY StableHLO operations.
   Other MLIR dialects (arith, scf, memref, func) are emulated via StableHLO.
+
+  This module serves as an index/aggregator. The actual implementations
+  are split into focused modules:
+  - `ExMLIR.Examples.Problems99.ListOperations` - Problems 1-28
+  - `ExMLIR.Examples.Problems99.Arithmetic` - Problems 31-41
+  - `ExMLIR.Examples.Problems99.Logic` - Problems 46-50
+  - `ExMLIR.Examples.Problems99.Trees` - Problems 54-73
+  - `ExMLIR.Examples.Problems99.Graphs` - Problems 80-91
+  - `ExMLIR.Examples.Problems99.Misc` - Remaining problems
+
+  Use `ExMLIR.Examples.Problems99.Runner.run_all/0` to validate all problems.
   """
+
+  alias ExMLIR.Examples.Problems99.{
+    ListOperations,
+    Arithmetic,
+    Logic,
+    Trees,
+    Graphs,
+    Misc,
+    Runner
+  }
+
+  @doc """
+  Runs validation for all 99 problems.
+  """
+  def run_all, do: Runner.run_all()
 
   # ============================================================================
   # Problem 1: Find the last element of a list

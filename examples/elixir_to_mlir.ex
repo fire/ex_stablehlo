@@ -20,30 +20,42 @@ defmodule ExMLIR.Examples.ElixirToMLIR do
   end
 
   @doc """
-  Example: Convert Axon model to MLIR.
+  Example: Convert Elixir/Nx function to MLIR.
   """
-  def example_axon_model do
-    model = Axon.input("input", shape: {nil, 784})
-    |> Axon.dense(128, activation: :relu)
-    |> Axon.dense(10, activation: :softmax)
+  def example_nx_function do
+    elixir_code = """
+    defn dense(input, weights, bias) do
+      Nx.dot(input, weights)
+      |> Nx.add(bias)
+    end
+    """
 
-    mlir_code = ExMLIR.from_axon(model)
-    {model, mlir_code}
+    mlir_code = ExMLIR.from_elixir(elixir_code)
+    {elixir_code, mlir_code}
   end
 
   @doc """
-  Example: Convert complex Axon model to MLIR.
+  Example: Convert complex Elixir/Nx computation to MLIR.
   """
-  def example_complex_model do
-    model = Axon.input("input", shape: {nil, 28, 28, 1})
-    |> Axon.conv(32, kernel_size: {3, 3}, activation: :relu)
-    |> Axon.max_pool(kernel_size: {2, 2})
-    |> Axon.flatten()
-    |> Axon.dense(128, activation: :relu)
-    |> Axon.dense(10, activation: :softmax)
+  def example_complex_computation do
+    elixir_code = """
+    defn conv2d(input, filter) do
+      Nx.conv(input, filter, padding: :same)
+    end
 
-    mlir_code = ExMLIR.from_axon(model)
-    {model, mlir_code}
+    defn mlp(input, w1, b1, w2, b2) do
+      input
+      |> Nx.dot(w1)
+      |> Nx.add(b1)
+      |> Nx.relu()
+      |> Nx.dot(w2)
+      |> Nx.add(b2)
+      |> Nx.softmax()
+    end
+    """
+
+    mlir_code = ExMLIR.from_elixir(elixir_code)
+    {elixir_code, mlir_code}
   end
 end
 

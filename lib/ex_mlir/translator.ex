@@ -10,32 +10,20 @@ defmodule ExMLIR.Translator do
   alias ExMLIR.ASTBuilder
 
   @doc """
-  Translates MLIR AST to Axon model.
+  Translates MLIR AST to Nx computation function.
 
-  Converts StableHLO operations to Axon layers.
+  Converts StableHLO operations to Nx operations.
   """
-  def to_axon(ast) do
+  def to_nx(ast) do
     state = %{
       variables: %{},
       inputs: [],
-      layers: []
+      outputs: []
     }
 
-    {axon_model, _state} = translate_ast(ast, state, :axon)
-    build_axon_model(axon_model)
+    {nx_expr, _state} = translate_ast(ast, state, :nx)
+    nx_expr
   end
-
-  defp build_axon_model(layers) when is_list(layers) do
-    # Build Axon model from layers
-    Enum.reduce(layers, nil, fn layer, acc ->
-      case acc do
-        nil -> layer
-        prev -> Axon.container([prev, layer])
-      end
-    end)
-  end
-
-  defp build_axon_model(layer), do: layer
 
   @doc """
   Translates MLIR AST to Elixir code string.
@@ -92,41 +80,88 @@ defmodule ExMLIR.Translator do
 
   defp translate_stablehlo(op, result, operands, type, state, mode) do
     case mode do
-      :axon ->
-        # Convert StableHLO operation to Axon layer
-        layer = case op do
-          :add -> build_axon_add(operands)
-          :multiply -> build_axon_multiply(operands)
-          :dot_general -> build_axon_dense(operands)
-          :convolution -> build_axon_conv(operands)
+      :nx ->
+        # Convert StableHLO operation to Nx operation
+        nx_op = case op do
+          :add -> build_nx_add(operands, state)
+          :multiply -> build_nx_multiply(operands, state)
+          :subtract -> build_nx_subtract(operands, state)
+          :divide -> build_nx_divide(operands, state)
+          :dot_general -> build_nx_dot(operands, state)
+          :convolution -> build_nx_conv(operands, state)
           _ -> nil
         end
         
-        if layer do
-          new_layers = [layer | (state.layers || [])]
-          {layer, %{state | layers: new_layers}}
+        if nx_op do
+          var_name = String.to_atom("var_#{result}")
+          new_vars = Map.put(state.variables, var_name, nx_op)
+          {nx_op, %{state | variables: new_vars}}
         else
           {nil, state}
         end
     end
   end
 
-  defp build_axon_add([a, b]) do
-    # Simplified - would need proper Axon layer construction
-    Axon.add([a, b])
+  defp build_nx_add([a, b], state) do
+    a_expr = resolve_operand(a, state)
+    b_expr = resolve_operand(b, state)
+    ASTBuilder.nx_call(:add, [a_expr, b_expr])
   end
 
-  defp build_axon_multiply([a, b]) do
-    Axon.multiply([a, b])
+  defp build_nx_multiply([a, b], state) do
+    a_expr = resolve_operand(a, state)
+    b_expr = resolve_operand(b, state)
+    ASTBuilder.nx_call(:multiply, [a_expr, b_expr])
   end
 
-  defp build_axon_dense([input, weights]) do
-    Axon.dense(input, weights)
+  defp build_nx_subtract([a, b], state) do
+    a_expr = resolve_operand(a, state)
+    b_expr = resolve_operand(b, state)
+    ASTBuilder.nx_call(:subtract, [a_expr, b_expr])
   end
 
-  defp build_axon_conv([input, filters]) do
-    Axon.conv(input, filters)
+  defp build_nx_divide([a, b], state) do
+    a_expr = resolve_operand(a, state)
+    b_expr = resolve_operand(b, state)
+    ASTBuilder.nx_call(:divide, [a_expr, b_expr])
   end
+
+  defp build_nx_dot([a, b], state) do
+    a_expr = resolve_operand(a, state)
+    b_expr = resolve_operand(b, state)
+    ASTBuilder.nx_call(:dot, [a_expr, b_expr])
+  end
+
+  defp build_nx_conv([input, filter], state) do
+    input_expr = resolve_operand(input, state)
+    filter_expr = resolve_operand(filter, state)
+    ASTBuilder.nx_call(:conv, [input_expr, filter_expr])
+  end
+
+  defp resolve_operand(operand_str, state) when is_binary(operand_str) do
+    cond do
+      # Variable reference
+      String.match?(operand_str, ~r/^%\d+$/) ->
+        var_name = String.to_atom("var_#{String.slice(operand_str, 1..-1)}")
+        case Map.get(state.variables, var_name) do
+          nil -> ASTBuilder.var(var_name)
+          val -> val
+        end
+
+      # Argument reference
+      String.match?(operand_str, ~r/^%arg\d+$/) ->
+        arg_idx = String.slice(operand_str, 4..-1) |> String.to_integer()
+        inputs_var = ASTBuilder.var(:inputs)
+        idx_lit = ASTBuilder.literal(arg_idx)
+        ASTBuilder.enum_at(inputs_var, idx_lit)
+
+      # Literal
+      true ->
+        parse_literal(operand_str)
+    end
+  end
+
+  defp resolve_operand(other, _state), do: other
 
   defp map_arith_to_stablehlo(:addi), do: :add
   defp map_arith_to_stablehlo(:addf), do: :add
