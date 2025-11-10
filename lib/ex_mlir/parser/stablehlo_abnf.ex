@@ -150,7 +150,7 @@ defmodule ExMLIR.Parser.StableHLOABNF do
     Enum.map(inputs, &normalize_input/1)
   end
 
-  defp normalize_inputs(other), do: []
+  defp normalize_inputs(other), do: []  # TODO: Handle non-standard input formats
 
   defp normalize_input({:rule, "FuncInput", children}) do
     value_id = extract_value(children, "ValueId")
@@ -163,14 +163,14 @@ defmodule ExMLIR.Parser.StableHLOABNF do
     Enum.map(outputs, &normalize_type/1)
   end
 
-  defp normalize_outputs(_), do: []
+  defp normalize_outputs(_), do: []  # TODO: Handle missing outputs
 
   defp normalize_body({:rule, "FuncBody", children}) do
     ops = extract_list(children, "Op")
     Enum.map(ops, &normalize_op/1)
   end
 
-  defp normalize_body(_), do: []
+  defp normalize_body(_), do: []  # TODO: Handle empty or invalid function bodies
 
   defp normalize_op({:rule, "Op", children}) do
     outputs = extract_optional(children, "OpOutputs")
@@ -212,14 +212,14 @@ defmodule ExMLIR.Parser.StableHLOABNF do
     Enum.map(values, &extract_value_id/1)
   end
 
-  defp normalize_input_values(_), do: []
+  defp normalize_input_values(_), do: []  # TODO: Handle missing input values
 
   defp normalize_input_funcs({:rule, "OpInputFuncs", children}) do
     funcs = extract_list(children, "OpInputFunc")
     Enum.map(funcs, &normalize_input_func/1)
   end
 
-  defp normalize_input_funcs(_), do: []
+  defp normalize_input_funcs(_), do: []  # TODO: Handle missing input functions
 
   defp normalize_input_func({:rule, "OpInputFunc", children}) do
     inputs = extract_value(children, "FuncInputs")
@@ -232,7 +232,7 @@ defmodule ExMLIR.Parser.StableHLOABNF do
     Enum.map(attrs, &normalize_attr/1)
   end
 
-  defp normalize_input_attrs(_), do: []
+  defp normalize_input_attrs(_), do: []  # TODO: Handle missing input attributes
 
   defp normalize_attr({:rule, "OpInputAttr", children}) do
     name = extract_value(children, "OpInputAttrName")
@@ -245,7 +245,7 @@ defmodule ExMLIR.Parser.StableHLOABNF do
     Enum.map(outputs, &extract_value_id/1)
   end
 
-  defp normalize_outputs_list(_), do: []
+  defp normalize_outputs_list(_), do: []  # TODO: Handle missing operation outputs
 
   defp normalize_signature({:rule, "OpSignature", children}) do
     # Extract input and output types

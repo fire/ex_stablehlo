@@ -48,11 +48,13 @@ defmodule ExMLIR.MLIRGenerator do
   defp map_arith_to_stablehlo(_), do: :add
 
   defp generate_operation({:memref, op, result, args}) do
+    # TODO: Implement memref operation generation
     args_str = Enum.join(args, ", ")
     "  %#{result} = memref.#{op} #{args_str}"
   end
 
   defp generate_operation({:scf, op, _line}) do
+    # TODO: Implement scf operation generation
     "  scf.#{op} ..."
   end
 
@@ -62,10 +64,12 @@ defmodule ExMLIR.MLIRGenerator do
   end
 
   defp generate_operation({:assign, result, _expr}) do
+    # TODO: Implement assignment operation generation
     "# Assignment to %#{result}"
   end
 
   defp generate_operation(other) do
+    # TODO: Handle unknown operations
     "# #{inspect(other)}"
   end
 

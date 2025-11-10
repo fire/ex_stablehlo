@@ -85,7 +85,7 @@ defmodule ExMLIR.Test.Fixtures.StableHLOByte do
   MLIR bytecode starts with a magic number.
   """
   def is_bytecode?(bytes) when is_binary(bytes) do
-    # MLIR bytecode magic number check
+    # TODO: MLIR bytecode magic number check
     # Actual implementation would check for MLIR bytecode header
     String.starts_with?(bytes, "ML")
   end

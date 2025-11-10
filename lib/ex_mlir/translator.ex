@@ -50,16 +50,16 @@ defmodule ExMLIR.Translator do
           translate_stablehlo(op, result, operands, type, st, mode)
 
         {:arith, op, result, operands, type} ->
-          # Emulate arith via StableHLO
+          # TODO: Emulate arith via StableHLO
           stablehlo_op = map_arith_to_stablehlo(op)
           translate_stablehlo(stablehlo_op, result, operands, type, st, mode)
 
         {:scf, op, line} ->
-          # Emulate scf via StableHLO
+          # TODO: Emulate scf via StableHLO
           translate_scf_via_stablehlo(op, line, st, mode)
 
         {:memref, op, result, args} ->
-          # Emulate memref via StableHLO
+          # TODO: Emulate memref via StableHLO
           translate_memref_via_stablehlo(op, result, args, st, mode)
 
         {:return, value, type} ->
@@ -89,7 +89,7 @@ defmodule ExMLIR.Translator do
           :divide -> build_nx_divide(operands, state)
           :dot_general -> build_nx_dot(operands, state)
           :convolution -> build_nx_conv(operands, state)
-          _ -> nil
+          _ -> nil  # TODO: Implement remaining StableHLO operations
         end
         
         if nx_op do
@@ -97,7 +97,7 @@ defmodule ExMLIR.Translator do
           new_vars = Map.put(state.variables, var_name, nx_op)
           {nx_op, %{state | variables: new_vars}}
         else
-          {nil, state}
+          {nil, state}  # TODO: Handle unsupported operations
         end
     end
   end
@@ -174,16 +174,16 @@ defmodule ExMLIR.Translator do
   defp map_arith_to_stablehlo(_), do: :add
 
   defp translate_scf_via_stablehlo(op, _line, state, mode) do
-    # SCF operations emulated via StableHLO control flow
+    # TODO: SCF operations emulated via StableHLO control flow
     case op do
-      :if -> {nil, state}  # Would use stablehlo.if
-      :while -> {nil, state}  # Would use stablehlo.while
-      _ -> {nil, state}
+      :if -> {nil, state}  # TODO: Would use stablehlo.if
+      :while -> {nil, state}  # TODO: Would use stablehlo.while
+      _ -> {nil, state}  # TODO: Implement remaining SCF operations
     end
   end
 
   defp translate_memref_via_stablehlo(op, _result, _args, state, mode) do
-    # Memref operations emulated via StableHLO tensor operations
+    # TODO: Memref operations emulated via StableHLO tensor operations
     {nil, state}
   end
 

@@ -434,25 +434,28 @@ defmodule ExMLIR.Examples.Problems99.ListOperations do
     end)
   end
 
-  # Continue with remaining problems 8-28...
+  # TODO: Continue with remaining problems 8-28...
   # For brevity, I'll add stubs for the remaining problems
 
+  # TODO: Problem 8: Eliminate consecutive duplicates
   def problem8_stablehlo_mlir, do: "# Problem 8: Eliminate consecutive duplicates - TODO"
   def problem8_test_data, do: []
   def problem8_nx_function, do: nil
   def problem8_validate, do: []
 
+  # TODO: Problem 9: Pack consecutive duplicates
   def problem9_stablehlo_mlir, do: "# Problem 9: Pack consecutive duplicates - TODO"
   def problem9_test_data, do: []
   def problem9_nx_function, do: nil
   def problem9_validate, do: []
 
+  # TODO: Problem 10: Run-length encoding
   def problem10_stablehlo_mlir, do: "# Problem 10: Run-length encoding - TODO"
   def problem10_test_data, do: []
   def problem10_nx_function, do: nil
   def problem10_validate, do: []
 
-  # Problems 11-28 stubs
+  # TODO: Problems 11-28 stubs
   for n <- 11..28 do
     def unquote(:"problem#{n}_stablehlo_mlir")(), do: "# Problem #{n} - TODO"
     def unquote(:"problem#{n}_test_data")(), do: []

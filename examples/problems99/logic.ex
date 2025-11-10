@@ -87,7 +87,7 @@ defmodule ExMLIR.Examples.Problems99.Logic do
     end)
   end
 
-  # Problems 47-50 stubs
+  # TODO: Problems 47-50 stubs
   for n <- 47..50 do
     def unquote(:"problem#{n}_stablehlo_mlir")(), do: "# Problem #{n} - TODO"
     def unquote(:"problem#{n}_test_data")(), do: []

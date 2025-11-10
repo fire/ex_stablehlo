@@ -212,7 +212,7 @@ defmodule ExMLIR.Examples.Problems99.Arithmetic do
     end)
   end
 
-  # Problems 34-41 stubs
+  # TODO: Problems 34-41 stubs
   for n <- 34..41 do
     def unquote(:"problem#{n}_stablehlo_mlir")(), do: "# Problem #{n} - TODO"
     def unquote(:"problem#{n}_test_data")(), do: []

@@ -7,7 +7,7 @@ defmodule ExMLIR.Examples.Problems99.Trees do
 
   alias ExMLIR
 
-  # Problems 54-73 stubs
+  # TODO: Problems 54-73 stubs
   for n <- 54..73 do
     def unquote(:"problem#{n}_stablehlo_mlir")(), do: "# Problem #{n} - TODO"
     def unquote(:"problem#{n}_test_data")(), do: []

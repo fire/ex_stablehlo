@@ -7,7 +7,7 @@ defmodule ExMLIR.Examples.Problems99.Graphs do
 
   alias ExMLIR
 
-  # Problems 80-91 stubs
+  # TODO: Problems 80-91 stubs
   for n <- 80..91 do
     def unquote(:"problem#{n}_stablehlo_mlir")(), do: "# Problem #{n} - TODO"
     def unquote(:"problem#{n}_test_data")(), do: []

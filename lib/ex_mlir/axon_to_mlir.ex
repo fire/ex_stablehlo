@@ -27,11 +27,11 @@ defmodule ExMLIR.AxonToMLIR do
   end
 
   defp extract_axon_operations(model) do
-    # Extract Axon model structure and convert to StableHLO operations
+    # TODO: Extract Axon model structure and convert to StableHLO operations
     case model do
       # Axon model is typically a struct or map with layers
       %{__struct__: Axon} ->
-        # Traverse Axon model structure and extract layers
+        # TODO: Traverse Axon model structure and extract layers
         extract_layers(model)
 
       # If it's already a list of operations
@@ -39,12 +39,12 @@ defmodule ExMLIR.AxonToMLIR do
         ops
 
       _ ->
-        []
+        []  # TODO: Handle unknown model types
     end
   end
 
   defp extract_layers(model) do
-    # Simplified - would need to traverse Axon model structure
+    # TODO: Simplified - would need to traverse Axon model structure
     # to extract all layers and convert to StableHLO operations
     []
   end
@@ -133,22 +133,22 @@ defmodule ExMLIR.AxonToMLIR do
   end
 
   defp convert_input(_args, mlir_ops, var_counter, var_map) do
-    # Input layer -> StableHLO constant or input
+    # TODO: Input layer -> StableHLO constant or input
     {mlir_ops, var_counter, var_map}
   end
 
   defp convert_dense(_args, mlir_ops, var_counter, var_map) do
-    # Dense layer -> StableHLO dot_general + add
+    # TODO: Dense layer -> StableHLO dot_general + add
     {mlir_ops, var_counter, var_map}
   end
 
   defp convert_conv(_args, mlir_ops, var_counter, var_map) do
-    # Convolution -> StableHLO convolution
+    # TODO: Convolution -> StableHLO convolution
     {mlir_ops, var_counter, var_map}
   end
 
   defp convert_activation(_args, mlir_ops, var_counter, var_map) do
-    # Activation -> StableHLO operations (relu, sigmoid, etc.)
+    # TODO: Activation -> StableHLO operations (relu, sigmoid, etc.)
     {mlir_ops, var_counter, var_map}
   end
 
@@ -192,20 +192,21 @@ defmodule ExMLIR.AxonToMLIR do
   end
 
   defp convert_activation(activation) do
-    # Activations are typically element-wise operations
+    # TODO: Activations are typically element-wise operations
     case activation do
       :relu ->
         [{:arith, :maxsi, 0, ["%input", "0"], {:integer, 32}}]
 
       :sigmoid ->
-        # Sigmoid requires more complex operations
+        # TODO: Sigmoid requires more complex operations
         []
 
       :tanh ->
+        # TODO: Implement tanh activation
         []
 
       _ ->
-        []
+        []  # TODO: Implement remaining activation functions
     end
   end
 end

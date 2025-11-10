@@ -117,20 +117,20 @@ defmodule ExMLIR.DialectEmulator do
   end
 
   defp emulate_affine_map([map_expr, dims], state, mode) do
-    # Affine map: compute indices using affine expressions
+    # TODO: Affine map: compute indices using affine expressions
     # This would need a more sophisticated implementation
     # For now, return a placeholder
     {ASTBuilder.literal(nil), state}
   end
 
   defp emulate_affine_apply([map, operands], state, mode) do
-    # Apply affine transformation to operands
+    # TODO: Apply affine transformation to operands
     # Compose from arith operations
     {ASTBuilder.literal(nil), state}
   end
 
   defp emulate_generic_linalg([operation, inputs, outputs], state, mode) do
-    # Generic linalg operation - compose from basic operations
+    # TODO: Generic linalg operation - compose from basic operations
     # This would analyze the operation and decompose it
     {ASTBuilder.literal(nil), state}
   end
@@ -165,7 +165,7 @@ defmodule ExMLIR.DialectEmulator do
   end
 
   defp apply_operation(prev, next) do
-    # Apply next operation to previous result
+    # TODO: Apply next operation to previous result
     # This is a simplified version
     next
   end
